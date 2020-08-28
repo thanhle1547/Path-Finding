@@ -33,7 +33,8 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import path_finding.dialog.JDialogGAsParams;
+// import path_finding.dialog.JDialogMyCustomGAsParams;
+import path_finding.dialog.JDialogli2006_GAsParams;
 import path_finding.dialog.JFileChooserExportMap;
 import path_finding.dialog.JFileChooserImportMap;
 
@@ -115,38 +116,6 @@ public class PathFinding {
 	Canvas canvas;
 	// BORDER
 	Border loweredetched = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
-
-	/**
-	 * @author thanhle1547
-	 */
-	enum Direction {
-		// 2 dimensional array
-		// 		NW (-1, -1)   N (-1, 0)	  NE (-1, 1)
-		// 		W (0, -1) 		(0, 0)     E (0, 1)
-		// 		SW (1, -1)    S (1, 0)	  SE (1, 1)
-		// => NE ~ NorthEast: x = -1, y = 1
-		// => E ~ EastEast: x = 0, y = 1
-		// E(0, 1), W(0, -1), N(-1, 0), S(1, 0);
-		NW(-1, -1), N(-1, 0), NE(-1, 1), 
-		W(0, -1), CENTER(0, 0), E(0, 1), 
-		SW(1, -1), S(1, 0), SE(1, 1);
-
-		private int x;
-		private int y;
-
-		private Direction(int x, int y) {
-			this.x = x;
-			this.y = y;
-		}
-
-		public int getX() {
-			return x;
-		}
-
-		public int getY() {
-			return y;
-		}
-	}
 
 	public PathFinding() { // CONSTRUCTOR
 		wallList = new ArrayList<>();
@@ -267,16 +236,11 @@ public class PathFinding {
 	/**
 	 * @author thanhle1547
 	 */
-	private void changeTextAreaLabel() {
-		switch(curAlg) {
-				case 0:
-				case 1:
-					textAreasL.setText("Hàng đợi");
-					break;
-				case 2:
-					textAreasL.setText("Danh sách quần thể");
-					break;
-			}
+	private void setEnableWorkableComponents(boolean state) {
+		setEnableJPanel(mapP, state);
+		resetB.setEnabled(state);
+		searchB.setEnabled(state);
+		algorithmsBx.setEnabled(state);
 	}
 
 	private void initialize() { // INITIALIZE THE GUI ELEMENTS
@@ -509,8 +473,7 @@ public class PathFinding {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
 				curAlg = algorithmsBx.getSelectedIndex();
-				changeTextAreaLabel();
-				// Update();
+				Update();
 			}
 		});
 		speed.addChangeListener(new ChangeListener() {
@@ -642,15 +605,17 @@ public class PathFinding {
 
 			g.setColor(Color.MAGENTA);
 			for (ArrayList<Node> path : pathList) {
-				g.drawOval(getCenter(
-						path.get(0).getX()) - 3, getCenter(path.get(0).getY()) - 3, 6, 6);
-				g.fillOval(getCenter(
-						path.get(0).getX()) - 3, getCenter(path.get(0).getY()) - 3, 6, 6);
+				g.drawOval(
+						getCenter(path.get(0).getX()) - 3, getCenter(path.get(0).getY()) - 3, 6, 6);
+				g.fillOval(
+						getCenter(path.get(0).getX()) - 3, getCenter(path.get(0).getY()) - 3, 6, 6);
 				for (int i = 0; i < path.size() - 1; i++) {
 					Node curr = path.get(i),
 						 next = path.get(i+1);
-					g.drawLine(getCenter(curr.getX()), getCenter(curr.getY()), 
-							getCenter(next.getX()), getCenter(next.getY()));
+					g.drawLine(
+							getCenter(curr.getX()), getCenter(curr.getY()), 
+							getCenter(next.getX()), getCenter(next.getY())
+						);
 					g.drawOval(getCenter(next.getX()) - 3, getCenter(next.getY()) - 3, 6, 6);
 					g.fillOval(getCenter(next.getX()) - 3, getCenter(next.getY()) - 3, 6, 6);
 				}
@@ -794,61 +759,72 @@ public class PathFinding {
 			dialog.setText(population.toString());
 			dialog.show(xPos + MSIZE + 50 , yPos, 400, MSIZE); */
 			
-			JDialogGAsParams dialog = new JDialogGAsParams();
+			// JDialogMyCustomGAsParams dialog = new JDialogMyCustomGAsParams();
+			JDialogli2006_GAsParams dialog = new JDialogli2006_GAsParams();
 			dialog.show();
 
 			GeneticAlgorithm alg 
-					= new GeneticAlgorithm(m, wallList, CSIZE, dialog.getPenaltyValue());
+					// = new GeneticAlgorithm(m, wallList, CSIZE, dialog.getPenaltyValue());
+					= new li2006_GAs(m, wallList, CSIZE, dialog.getNumOfSizeForSelect());
 			int generation = 0;
 
 			alg.initPopulation(dialog.getPopulationSize(), cells, m.getCapacity());
 			pathList = alg.getPopulation();
 
-			textArea.setText(null);
-			setEnableJPanel(mapP, false);
-			resetB.setEnabled(false);
+			textArea.setText(alg.getStringDataFormat());
+			setEnableWorkableComponents(false);
 			while (solving) {
 				if (generation == dialog.getGenerationNumber()) {
 					solving = false;
 					break;
 				}
 
+				textArea.append("  -  Thế hệ F" + generation + ":\n");
+
 				Update();
 				delay();
 
 				alg.evaluate();
+				textArea.append("    +,  Kq sau khi đánh giá:\n");
 				pathList = alg.getPopulation();
-				textArea.setText(alg.dataToString(true));
+				textArea.append(alg.dataToString(false));
 				Update();
 				delay();
 
 				alg.select();
+				textArea.append("    +,  Kq sau khi chọn lọc:\n");
 				pathList = alg.getPopulation();
-				textArea.setText(alg.dataToString(true));
+				textArea.append(alg.dataToString(false));
 				Update();
 				delay();
 
 				alg.crossover();
+				textArea.append("    +,  Kq sau khi lai ghép:\n");
 				pathList = alg.getPopulation();
-				textArea.setText(alg.dataToString(true));
+				textArea.append(alg.dataToString(false));
 				Update();
 				delay();
 
 				alg.mutation();
+				textArea.append("    +,  Kq sau khi đột biến:\n");
 				pathList = alg.getPopulation();
-				textArea.setText(alg.dataToString(true));
+				textArea.append(alg.dataToString(false));
 				Update();
 				delay();
 
 				generation++;
+
+				textArea.append("-- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n\n");
 			}
-			setEnableJPanel(mapP, true);
-			resetB.setEnabled(true);
+			setEnableWorkableComponents(true);
 
 			alg.selectBestOnce();
 			pathList = alg.getBestIndvAsPopulation();
-			textArea.setText(alg.bestIndvToString(true));
-			textArea.append("-- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n");
+			textArea.append(alg.bestIndvToString(false));
+			textArea.append(
+					"-- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n"
+					+ "Thế hệ cuối:\n"
+			);
 			textArea.append(alg.dataToString(false));
 			length = round(alg.getBestIndvFitness(), 2);
 			Update();

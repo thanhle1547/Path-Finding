@@ -38,15 +38,19 @@ public class GeneticAlgorithm {
     ArrayList<Node> bestIndividual; // OR bestChromosome
     Double bestIndvFitness; // bestIndividualFitness
 
-    public GeneticAlgorithm(Map m, ArrayList<Node> wallList, int cSize, int penaltyValue) {
+    public GeneticAlgorithm(Map m, ArrayList<Node> wallList, int cSize) {
         this.startNode = m.getStartNode();
         this.finishNode = m.getFinishNode();
         this.map = m.getMap();
         this.wallList = wallList;
         CSIZE = cSize;
-        this.penaltyValue = penaltyValue;
 
         fitness = new ArrayList<>();
+    }
+
+    public GeneticAlgorithm(Map m, ArrayList<Node> wallList, int cSize, int penaltyValue) {
+        this(m, wallList, cSize);
+        this.penaltyValue = penaltyValue;
     }
 
     /**
@@ -375,7 +379,10 @@ public class GeneticAlgorithm {
 
     protected boolean isIntersectObstacle(Node startNode, Node endNode, Node[][] map) {
         ArrayList<Node> wallNode = new ArrayList<>();
-        Line2D line = new Line2D.Double(startNode.toPoint2D(CSIZE), endNode.toPoint2D(CSIZE));
+        Line2D line = new Line2D.Double(
+                startNode.getCenterPoint(CSIZE), 
+                endNode.getCenterPoint(CSIZE)
+        );
 
         // TH: nút bđ và nút kt ko đi theo chiều tăng dần -> sắp xếp lại để lấy tọa độ
         // -> Kq: Tọa độ lớn nhất (0), Tọa độ nhỏ nhất (1)
@@ -457,11 +464,14 @@ public class GeneticAlgorithm {
     }
 
     protected boolean isIntersectObstacle(Node startNode, Node endNode, Node node) {
-        Line2D line = new Line2D.Double(startNode.toPoint2D(CSIZE), endNode.toPoint2D(CSIZE));
+        Line2D line = new Line2D.Double(
+                startNode.getCenterPoint(CSIZE), 
+                endNode.getCenterPoint(CSIZE)
+        );
         return line.intersects(new Rectangle(node.getX() * CSIZE, node.getY() * CSIZE, CSIZE, CSIZE));
     }
 
-    protected ArrayList<Node> getWallNode(Node startNode, Node endNode, Node[][] map) {
+    protected ArrayList<Node> getIntersectWallNode(Node startNode, Node endNode) {
         ArrayList<Node> wallNodes = new ArrayList<>();
         ArrayList<Integer> 	x_coords = new ArrayList<>(),
                             y_coords = new ArrayList<>();
@@ -475,7 +485,7 @@ public class GeneticAlgorithm {
 
         for (int i = x_coords.get(0); i <= x_coords.get(1); i++) {
             for (int j = y_coords.get(0); j <= y_coords.get(1); j++) {
-                if (map[i][j].getType() == 2)
+                if (map[i][j].getType() == 2 && isIntersectObstacle(startNode, endNode, map[i][j]))
                     wallNodes.add(map[i][j]);
             }
         }

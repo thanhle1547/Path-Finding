@@ -4,14 +4,13 @@ import java.awt.geom.Point2D;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import path_finding.PathFinding.Direction;
 import path_finding.Node;
 
 /**
  * @author greerviau
  * @author thanhLe1547
  */
-class Node implements Serializable {
+class Node implements Serializable, Cloneable {
 	private static final long serialVersionUID = -7535783824484768104L;
 	/**
 	 * Node number
@@ -45,6 +44,14 @@ class Node implements Serializable {
 		this.x = x;
 		this.y = y;
 		hops = -1;
+	}
+
+	@Override
+	protected Node clone() {
+		Node c = new Node(no, cellType, x, y);
+		c.setHops(hops);
+		c.setLastNode(lastX, lastY);
+		return c;
 	}
 	
 	/**
@@ -97,10 +104,11 @@ class Node implements Serializable {
 	 * @see <a href="https://stackoverflow.com/a/48676199">
 	 * 			Given two graph points determine in what direction the second point is from the first
 	 * 		</a>
+	 * 		<p><b>NOTE: </b>Đảo lại dấu >, < vì cách tạo map trong này khác</p>
 	 */
 	public Direction getDirection(Node node) {
 		String d = "";
-		d += y < node.getY() ? "N" : y > node.getY() ? "S" : "";
+		d += y > node.getY() ? "N" : y < node.getY() ? "S" : "";
 		d += x < node.getX() ? "E" : x > node.getX() ? "W" : "";
 		return d == "" ? Direction.CENTER : Direction.valueOf(d);
 	}
@@ -133,8 +141,11 @@ class Node implements Serializable {
 	/**
 	 * @author thanhLe1547
 	 */
-	public Point2D toPoint2D(int multiply) {
-		return new Point2D.Double(x * multiply, y * multiply);
+	public Point2D getCenterPoint(int squareSideLength) {
+		return new Point2D.Double(
+			(x * squareSideLength) + (squareSideLength / 2), 
+			(y * squareSideLength) + (squareSideLength / 2)
+		);
 	}
 
 	public int getNo() {return no;}		

@@ -1,7 +1,7 @@
 package path_finding;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 /**
@@ -14,9 +14,14 @@ import java.util.Random;
  * @author thanhLe1547
  */
 public class li2006_GAs extends GeneticAlgorithm {
+    /**
+     * Số lượng cá thể muốn chọn vào 1 nhóm để random trong bước `Chọn lọc`
+     */
+    int numOfSizeForSelect;
 
-    public li2006_GAs(Map m, ArrayList<Node> wallList, int cSize, int penaltyValue) {
-        super(m, wallList, cSize, penaltyValue);
+    public li2006_GAs(Map m, ArrayList<Node> wallList, int cSize, int numOfSizeForSelect) {
+        super(m, wallList, cSize);
+        this.numOfSizeForSelect = numOfSizeForSelect;
     }
 
     public void initPopulation(int size, int mapSize, int capacity) {
@@ -54,22 +59,41 @@ public class li2006_GAs extends GeneticAlgorithm {
      * </ol>
      */
     public ArrayList<Node> initChromosome() {
+        Random rd = new Random();
         int currIndex = 1;
+        boolean hasAddedNode = false;
+        Node startNode = this.startNode, 
+            endNode = this.finishNode, 
+            wallNode;
         ArrayList<Node> chromosome = new ArrayList<>();
+        ArrayList<Node> wallNodeList;
+
         chromosome.add(startNode);
         chromosome.add(finishNode);
+        wallNodeList = getIntersectWallNode(startNode, endNode);
+
+        if (!isIntersectObstacle(startNode, endNode, map))
+            return chromosome;
+        
         while (true) {
             try {
-                // Node startNode = chromosome.get(currIndex - 1); // ~  size - 2
-                // Node endNode = chromosome.get(currIndex); // ~ size - 1
-                chromosome.add(currIndex, randomIntersectNode(
-                    chromosome.get(currIndex - 1), 
-                    chromosome.get(currIndex), 
-                    map
+                if (hasAddedNode) {
+                    wallNodeList = getIntersectWallNode(startNode, endNode);
+                    if (wallNodeList.size() == 0 && chromosome.size() > 2)
+                        return chromosome;
+                }
+                wallNode = wallNodeList.get(rd.nextInt(wallNodeList.size()));
+                chromosome.add(currIndex, getRedialNode(
+                    startNode.getDirection(endNode), 
+                    startNode, 
+                    wallNode
                 ));
                 currIndex++;
-            } catch (Exception e) {
-                return chromosome;
+                startNode = chromosome.get(currIndex - 1); // ~ size - 2
+                endNode = chromosome.get(currIndex); // ~ size - 1
+                hasAddedNode = true;
+            } catch (NoSuchElementException e) {
+                hasAddedNode = false;
             }
         }
     }
@@ -78,48 +102,74 @@ public class li2006_GAs extends GeneticAlgorithm {
      * Chọn lọc - Sử dụng phương pháp Tournament Selection
      */
     public void select() {
-        int s = 10,                 // selectedNumber ~ số lượng cá thể muốn chọn
-            n = population.size(),
+        int n = population.size(),
             b = 0;                  // indexBestFitness
         Random rd = new Random();
         ArrayList<ArrayList<Node>> newPopulation = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             b = 0;
-            for (int j = 0; j < s; j++) {
+            for (int j = 0; j < numOfSizeForSelect; j++) {
                 int rdIndex = rd.nextInt(n);
                 if (b == 0 || fitness.get(rdIndex) > fitness.get(b))
                     b = rdIndex;
             }
             newPopulation.add(population.get(b));
+            fitness.add(fitness.get(b));
         }
         population = newPopulation;
     }
 
-    protected Node randomIntersectNode(Node startNode, Node endNode, Node[][] map) 
-            throws IndexOutOfBoundsException 
-    {
-        ArrayList<Node> wallNodes = new ArrayList<>();
-        ArrayList<Integer> 	x_coords = new ArrayList<>(),
-                            y_coords = new ArrayList<>();
-        x_coords.add(startNode.getX());
-        x_coords.add(endNode.getX());
-        y_coords.add(startNode.getY());
-        y_coords.add(endNode.getY());
+    protected Node getRedialNode(Direction lineDirection, Node startNode, Node node) {
+        // 2 dimensional array
+		// 	(-2, -2)                (0, -1)	            (2, -2)
+		// 		    NW (-1, -1)   N (0, -1)	  NE (1, -1)
+		// 	(-2, 0) W (-1, 0) 		(0, 0)     E (1, 0) (0, 2)
+		// 		    SW (-1, 1)    S (0, 1)	  SE (1, 1)
+		// 	(-2, 2)                 (0, 2)              (2, 2)
+        Node n1 = node, 
+            n2 = node;
+        int step = 1,
+            x1, y1, x2, y2;
+        boolean hasStNodeOutBound = false,
+                hasNdNodeOutBound = false;
 
-        Collections.sort(x_coords);
-        Collections.sort(y_coords);
-
-        for (int i = x_coords.get(0); i <= x_coords.get(1); i++) {
-            for (int j = y_coords.get(0); j <= y_coords.get(1); j++) {
-                if (map[i][j].getType() == 2 && isIntersectObstacle(startNode, endNode, map[i][j]))
-                    wallNodes.add(map[i][j]);
-            }
+        if (lineDirection.name().length() == 1) {
+            x1 = lineDirection.getY();
+            y1 = lineDirection.getX();
+            x2 = - lineDirection.getY();
+            y2 = - lineDirection.getX();
+        } else {
+            x1 = lineDirection.getX();
+            y1 = - lineDirection.getY();
+            x2 = - lineDirection.getX();
+            y2 = lineDirection.getY();
         }
 
-        return wallNodes.get(new Random().nextInt(wallNodes.size()));
+        while (true) {
+            if (hasStNodeOutBound && hasNdNodeOutBound)
+                throw new NoSuchElementException();
+
+            if (!hasStNodeOutBound) {
+                try {
+                    n1 = map[node.getX() + (x1 * step)][node.getY() + (y1 * step)];
+                    if (n1.getType() == 3 && !isIntersectObstacle(startNode, n1, map))
+                        return n1;
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    hasStNodeOutBound = true;
+                }
+            }
+            
+            if (!hasNdNodeOutBound) {
+                try {
+                    n2 = map[node.getX() + (x2 * step)][node.getY() + (y2 * step)];
+                    if (n2.getType() == 3 && !isIntersectObstacle(startNode, n2, map))
+                        return n2;
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    hasNdNodeOutBound = true;
+                }
+            }
+            
+            step++;
+        }
     }
-
-    /* protected Node getRedialNode(Node node, Node[][] map) {
-
-    } */
 }
