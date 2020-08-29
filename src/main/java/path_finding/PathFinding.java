@@ -537,6 +537,13 @@ public class PathFinding {
 		densityL.setText(obstacles.getValue() + "%");
 		checkL.setText("Checks: " + checks);
 	}
+
+	public void updateWallList(Node node) {
+		if (node.getType() == 2)
+			wallList.add(node);
+		else if (node.getType() == 3)
+			wallList.remove(node);
+	}
 	
 	public void reset() {	//RESET METHOD
 		solving = false;
@@ -631,6 +638,7 @@ public class PathFinding {
 				if((tool == 2 || tool == 3) && (current.getType() != 0 && current.getType() != 1))
 					current.setType(tool);
 				Update();
+				updateWallList(current);
 			} catch(Exception z) {}
 		}
 
@@ -680,6 +688,7 @@ public class PathFinding {
 					default:
 						if(current.getType() != 0 && current.getType() != 1)
 							current.setType(tool);
+						updateWallList(current);
 						break;
 				}
 				Update();

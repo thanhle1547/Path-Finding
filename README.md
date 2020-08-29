@@ -1,7 +1,7 @@
 # Path Finding
 
 ## Description
-This program provides a visual demonstration of the process undergone by Dijkstra and A* (A star)
+This program provides a visual demonstration of the process undergone by Dijkstra, A* (A star) and GAs (Genetic Algorithm).
 
 ### [YouTube Video](https://www.youtube.com/watch?v=xGdBwdd_FLc&t)
 
@@ -18,3 +18,53 @@ A* works similarly to dijkstra by creating a priority queue of nodes and then ad
 ## Draw a maze
 ![drawmaze](https://user-images.githubusercontent.com/36581610/51815322-197f8a00-228e-11e9-80c9-b088d76b3ba2.gif)
 
+## How to add your algorithm
+
+1. Go to the line 67 and add your algorithm name.
+
+```java
+67   private String[] algorithms = { "GAs", "Dijkstra", "A*" };
+```
+
+2. Add your (public) algorithm function inside of class Algorithm, line 693.
+
+```java
+693  class Algorithm {	//ALGORITHM CLASS
+```
+
+3. Go to funtion ```startSearch()``` in line 499 and add a case (the number following the way you arranged in step 1) to call your function which you written in step 2. (```Alg``` is a instance of class ```Algorithm``` in line 693).
+
+```java
+499  public void startSearch() {	//START STATE
+...     // ... Other code
+501         switch(curAlg) {
+502             case 0:
+503                 Alg.GAs();
+504                 break;
+505             case 1:
+506                 Alg.Dijkstra();
+507                 break;
+508             case 2:
+509                 Alg.AStar();
+510                 break;
+511         }
+...     // ... Other code
+```
+
+## Some usefull tips
+
+1. If you wants to show the detail of processing or result of your algorithm, there is a instance of JTextArea (variable name ```textArea```) which you can call function setText()/append().
+
+2. Call ```Update()``` to repaint the canvas, then call ```delay()```, so you'll have time to see the changed.
+
+3. If you wants to show the path length, assign value to variable ```length``` (type double, call ```round()``` function).
+
+4. If you wants to show how many cells have been checked by algorithm, assign value to variable ```checks``` (type int).
+
+5. If you needs the wall list, there is a variable name ```wallList``` (type ArrayList\<Node\>).
+
+6. If you wants to show the path as a line, add the path to variable ```pathList``` (type ArrayList\<ArrayList\<Node\>\>). Or set type = 5 to the cell (color yellow in the canvas).
+
+5. Call ```setEnableWorkableComponents()``` function to dis/enable some controls (see the image below).
+
+![control diasble](./screenshots/control-diasble.png)
