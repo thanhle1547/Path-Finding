@@ -26,28 +26,28 @@ A* works similarly to dijkstra by creating a priority queue of nodes and then ad
 67   private String[] algorithms = { "GAs", "Dijkstra", "A*" };
 ```
 
-2. Add your (public) algorithm function inside of class Algorithm, line 693.
+2. Add your (public) algorithm function inside of class Algorithm, line 704.
 
 ```java
-693  class Algorithm {	//ALGORITHM CLASS
+704  class Algorithm {	//ALGORITHM CLASS
 ```
 
-3. Go to funtion ```startSearch()``` in line 499 and add a case (the number following the way you arranged in step 1) to call your function which you written in step 2. (```Alg``` is a instance of class ```Algorithm``` in line 693).
+3. Go to funtion ```startSearch()``` in line 499 and add a case (the number following the way you arranged in step 1) to call your function which you written in step 2. (```Alg``` is a instance of class ```Algorithm``` in line 704).
 
 ```java
-499  public void startSearch() {	//START STATE
+501  public void startSearch() {	//START STATE
 ...     // ... Other code
-501         switch(curAlg) {
-502             case 0:
-503                 Alg.GAs();
-504                 break;
-505             case 1:
-506                 Alg.Dijkstra();
-507                 break;
-508             case 2:
-509                 Alg.AStar();
-510                 break;
-511         }
+503         switch(curAlg) {
+504             case 0:
+505                 Alg.GAs();
+506                 break;
+507             case 1:
+508                 Alg.Dijkstra();
+509                 break;
+510             case 2:
+511                 Alg.AStar();
+512                 break;
+513         }
 ...     // ... Other code
 ```
 
@@ -65,6 +65,18 @@ A* works similarly to dijkstra by creating a priority queue of nodes and then ad
 
 6. If you wants to show the path as a line, add the path to variable ```pathList``` (type ArrayList\<ArrayList\<Node\>\>). Or set type = 5 to the cell (color yellow in the canvas).
 
-5. Call ```setEnableWorkableComponents()``` function to dis/enable some controls (see the image below).
+7. Call ```setEnableWorkableComponents()``` function to dis/enable some controls (see the image below).
 
 ![control diasble](./screenshots/control-diasble.png)
+
+8. If you needs map size like 16x16, toggle comment 2 line of following code below
+
+```java
+78   JSlider size = new JSlider(1, 5, 2);
+79   // JSlider size = new JSlider(10, 50, 20);
+
+...  AND
+
+444  m.setCells(size.getValue() * 10);
+445  // m.setCells(size.getValue());
+```

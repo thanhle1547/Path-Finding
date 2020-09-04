@@ -76,6 +76,7 @@ public class PathFinding {
 	Random r = new Random();
 	// SLIDERS
 	JSlider size = new JSlider(1, 5, 2);
+	// JSlider size = new JSlider(10, 50, 20);
 	JSlider speed = new JSlider(0, 500, delay);
 	JSlider obstacles = new JSlider(1, 100, 50);
 	// LABELS
@@ -371,7 +372,7 @@ public class PathFinding {
 		textP.setBounds(845, 10, 280, MSIZE);
 		space = 25;
 
-		textAreasL.setText("Danh sách quần thể");
+		textAreasL.setText("Kết quả");
 		textAreasL.setBounds(0, 0, 250, 25);
 		textP.add(textAreasL);
 		textArea.setLineWrap(true);
@@ -441,6 +442,7 @@ public class PathFinding {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				m.setCells(size.getValue() * 10);
+				// m.setCells(size.getValue());
 				cells = m.getCells();
 				clearMap();
 				reset();
@@ -594,7 +596,7 @@ public class PathFinding {
 					g.setColor(Color.BLACK);
 					g.drawRect(x*CSIZE,y*CSIZE,CSIZE,CSIZE);
 
-					if (showNumCB.isSelected() && cells < 30)
+					if (showNumCB.isSelected() && cells <= 20)
 						g.drawString(String.valueOf(map[x][y].getNo()), getAQuarter(x), getCenter(y));
 					//DEBUG STUFF
 					/* if(curAlg == 1)
@@ -782,6 +784,7 @@ public class PathFinding {
 
 			textArea.setText(alg.getStringDataFormat());
 			setEnableWorkableComponents(false);
+			delay();
 			while (solving) {
 				if (generation == dialog.getGenerationNumber()) {
 					solving = false;
@@ -826,6 +829,7 @@ public class PathFinding {
 				textArea.append("-- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n\n");
 			}
 			setEnableWorkableComponents(true);
+			delay();
 
 			alg.selectBestOnce();
 			pathList = alg.getBestIndvAsPopulation();
