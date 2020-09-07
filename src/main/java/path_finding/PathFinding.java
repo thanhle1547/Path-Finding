@@ -4,10 +4,13 @@ import java.awt.Graphics;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -23,16 +26,21 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
+import javax.swing.KeyStroke;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import path_finding.dialog.JDialogCustomMapSize;
 // import path_finding.dialog.JDialogMyCustomGAsParams;
 import path_finding.dialog.JDialogli2006_GAsParams;
 import path_finding.dialog.JFileChooserExportMap;
@@ -53,7 +61,8 @@ public class PathFinding {
 	JFrame frame;
 	// GENERAL VARIABLES
 	private Map m = new Map();
- 	private int cells = m.getCells();
+	private int columns = m.getColumns();
+    private int rows = m.getRows();
 	private int delay = 30;
 	private int tool = 0;
 	private int checks = 0;
@@ -62,7 +71,7 @@ public class PathFinding {
 	private int WIDTH = 1125; // 850;
 	private final int HEIGHT = 650;
 	private final int MSIZE = 600;
-	private int CSIZE = MSIZE / cells;
+	private int CSIZE = MSIZE / (columns > rows ? columns : rows);
 	// UTIL ARRAYS
 	private String[] algorithms = { "GAs", "Dijkstra", "A*" };
 	private String[] tools = { "Start", "Finish", "Wall", "Eraser" };
@@ -83,7 +92,7 @@ public class PathFinding {
 	JLabel algL = new JLabel("Algorithms");
 	JLabel toolL = new JLabel("Toolbox");
 	JLabel sizeL = new JLabel("Size:");
-	JLabel cellsL = new JLabel(cells + "x" + cells);
+	JLabel cellsL = new JLabel(columns + "x" + rows);
 	JLabel delayL = new JLabel("Delay:");
 	JLabel msL = new JLabel(delay + "ms");
 	JLabel obstacleL = new JLabel("Dens:");
@@ -108,11 +117,16 @@ public class PathFinding {
 	JTextArea textArea = new JTextArea();
 	JScrollPane scrollPane;
 	// PANELS
+	JPanel menuBarP = new JPanel(new FlowLayout(FlowLayout.LEFT));
 	JPanel toolP = new JPanel();
 	JPanel ctrlsP = new JPanel();
 	JPanel mapP = new JPanel();
 	JPanel imExportP = new JPanel();
 	JPanel textP = new JPanel();
+	// MENU
+	JMenuBar mapMB = new JMenuBar();
+	JMenu mapM = new JMenu("Map");
+	JMenuItem customMapSizeMI = new JMenuItem("Custom map size", KeyEvent.VK_C);
 	// CANVAS
 	Canvas canvas;
 	// BORDER
@@ -130,8 +144,8 @@ public class PathFinding {
 		for (int i = 0; i < m.getDensity(); i++) {
 			Node current;
 			do {
-				int x = r.nextInt(cells);
-				int y = r.nextInt(cells);
+				int x = r.nextInt(columns);
+				int y = r.nextInt(rows);
 				current = map[x][y]; // FIND A RANDOM NODE IN THE GRID
 			} while (current.getType() == 2); // IF IT IS ALREADY A WALL, FIND A NEW ONE
 			current.setType(2); // SET NODE TO BE A WALL
@@ -146,8 +160,8 @@ public class PathFinding {
 		m.setStartY(-1);
 		m.setNewMap(); // CREATE NEW MAP OF NODES
 		this.map = m.getMap();
-		for (int x = 0, no = 0; x < cells; x++) {
-			for (int y = 0; y < cells; y++, no++) {
+		for (int x = 0, no = 0; x < columns; x++) {
+			for (int y = 0; y < rows; y++, no++) {
 				map[x][y] = new Node(no, 3, x, y); // SET ALL NODES TO EMPTY
 			}
 		}
@@ -156,8 +170,8 @@ public class PathFinding {
 	}
 
 	public void resetMap() { // RESET MAP
-		for (int x = 0; x < cells; x++) {
-			for (int y = 0; y < cells; y++) {
+		for (int x = 0; x < columns; x++) {
+			for (int y = 0; y < rows; y++) {
 				Node current = map[x][y];
 				if (current.getType() == 4 || current.getType() == 5) // CHECK TO SEE IF CURRENT NODE IS EITHER CHECKED
 																		// OR FINAL PATH
@@ -262,7 +276,17 @@ public class PathFinding {
 		BoxLayout boxLayout = new BoxLayout(toolP, BoxLayout.Y_AXIS);
 		toolP.setLayout(boxLayout);
 		// toolP.setLayout(null);
-		toolP.setBounds(10, 10, 210, 600);
+		toolP.setBounds(10, 0, 210, 600);
+
+		// Tool Panel Menubar
+		menuBarP.setPreferredSize(new Dimension(210, 30));
+
+		mapM.setMnemonic(KeyEvent.VK_M);
+		mapMB.add(mapM);
+
+		customMapSizeMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
+		mapM.add(customMapSizeMI);
+		menuBarP.add(mapMB);
 
 		// Map Panel
 		mapP.setLayout(null);
@@ -272,7 +296,7 @@ public class PathFinding {
 		ctrlsP.setLayout(null);
 		ctrlsP.setPreferredSize(new Dimension(210, 290));
 		// ctrlsP.setBounds(0, 360, 210, 240);
-		
+
 		imExportP.setBounds(30, space, 140, 35);
 		imExportP.add(importB);
 		imExportP.add(exportB);
@@ -357,6 +381,7 @@ public class PathFinding {
 		creditB.setBounds(40, space, 120, 25);
 		ctrlsP.add(creditB);
 
+		toolP.add(menuBarP);
 		toolP.add(mapP);
 		toolP.add(ctrlsP);
 
@@ -383,6 +408,22 @@ public class PathFinding {
 		frame.getContentPane().add(textP);
 		
 		// ACTION LISTENERS
+		customMapSizeMI.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JDialogCustomMapSize dialog = new JDialogCustomMapSize();
+				if (dialog.show() == JOptionPane.OK_OPTION) {
+					m.setMapSize(dialog.getColumns(), dialog.getRows());
+					m.setNewMap();
+					columns = m.getColumns();
+					rows = m.getRows();
+					map = m.getMap();
+					clearMap();
+					reset();
+					Update();
+				}
+			}
+		});
 		importB.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -395,9 +436,10 @@ public class PathFinding {
 				clearMap();
 				m.setMap(dialog.getResult());
 				map = m.getMap();
-				cells = m.getCells();
-				for (int x = 0; x < cells; x++) {
-					for (int y = 0; y < cells; y++) {
+				columns = m.getColumns();
+				rows = m.getRows();
+				for (int x = 0; x < columns; x++) {
+					for (int y = 0; y < rows; y++) {
 						if (map[x][y].getType() == 2)
 							wallList.add(map[x][y]);
 					}
@@ -441,9 +483,10 @@ public class PathFinding {
 		size.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
-				m.setCells(size.getValue() * 10);
+				m.setMapSize(size.getValue() * 10, size.getValue() * 10);
 				// m.setCells(size.getValue());
-				cells = m.getCells();
+				columns = m.getColumns();
+				rows = m.getRows();
 				clearMap();
 				reset();
 				Update();
@@ -531,9 +574,9 @@ public class PathFinding {
 	public void Update() {	//UPDATE ELEMENTS OF THE GUI
 		// auto update capacity when called func setCells
 		m.updateDensity();
-		CSIZE = MSIZE/cells;
+		CSIZE = MSIZE / (columns > rows ? columns : rows);
 		canvas.repaint();
-		cellsL.setText(cells + "x" + cells);
+		cellsL.setText(columns + "x" + rows);
 		msL.setText(delay + "ms");
 		lengthL.setText("Path Length: " + length);
 		densityL.setText(obstacles.getValue() + "%");
@@ -570,8 +613,8 @@ public class PathFinding {
 		
 		public void paintComponent(Graphics g) {	//REPAINT
 			super.paintComponent(g);
-			for(int x = 0; x < cells; x++) {	//PAINT EACH NODE IN THE GRID
-				for(int y = 0; y < cells; y++) {
+			for(int x = 0; x < columns; x++) {	//PAINT EACH NODE IN THE GRID
+				for(int y = 0; y < rows; y++) {
 					switch(map[x][y].getType()) {
 						case 0:
 							g.setColor(Color.GREEN);
@@ -596,7 +639,7 @@ public class PathFinding {
 					g.setColor(Color.BLACK);
 					g.drawRect(x*CSIZE,y*CSIZE,CSIZE,CSIZE);
 
-					if (showNumCB.isSelected() && cells <= 20)
+					if (showNumCB.isSelected() && columns <= 20 && rows <= 20)
 						g.drawString(String.valueOf(map[x][y].getNo()), getAQuarter(x), getCenter(y));
 					//DEBUG STUFF
 					/* if(curAlg == 1)
@@ -779,7 +822,7 @@ public class PathFinding {
 					= new li2006_GAs(m, wallList, CSIZE, dialog.getNumOfSizeForSelect());
 			int generation = 0;
 
-			alg.initPopulation(dialog.getPopulationSize(), cells, m.getCapacity());
+			alg.initPopulation(dialog.getPopulationSize(), columns, rows, m.getCapacity());
 			pathList = alg.getPopulation();
 
 			textArea.setText(alg.getStringDataFormat());
@@ -868,7 +911,7 @@ public class PathFinding {
 				for(int b = -1; b <= 1; b++) {
 					int xbound = current.getX()+a;
 					int ybound = current.getY()+b;
-					if((xbound > -1 && xbound < cells) && (ybound > -1 && ybound < cells)) {	//MAKES SURE THE NODE IS NOT OUTSIDE THE GRID
+					if((xbound > -1 && xbound < columns) && (ybound > -1 && ybound < rows)) {	//MAKES SURE THE NODE IS NOT OUTSIDE THE GRID
 						Node neighbor = map[xbound][ybound];
 						if((neighbor.getHops()==-1 || neighbor.getHops() > hops) && neighbor.getType()!=2) {	//CHECKS IF THE NODE IS NOT A WALL AND THAT IT HAS NOT BEEN EXPLORED
 							explore(neighbor, current.getX(), current.getY(), hops);	//EXPLORE THE NODE

@@ -8,9 +8,10 @@ import java.io.Serializable;
 public class Map implements Serializable {
     private static final long serialVersionUID = 6181512265542053592L;
 
-    private int cells = 20;
+    private int columns = 20;
+    private int rows = 20;
     private double dense = .5;
-    private int capacity = cells * cells;
+    private int capacity = columns * rows;
     private double density = capacity * .5;
     private int startx = -1;
     private int starty = -1;
@@ -18,13 +19,28 @@ public class Map implements Serializable {
     private int finishy = -1;
     private Node[][] map;
 
-    public int getCells() {
-        return cells;
+    public int getColumns() {
+        return columns;
     }
 
-    public void setCells(int cells) {
-        this.cells = cells;
-        this.capacity = cells * cells;
+    public void setColumns(int columns) {
+        this.columns = columns;
+        capacity = columns * rows;
+    }
+
+    public int getRows() {
+        return rows;
+    }
+
+    public void setRows(int rows) {
+        this.rows = rows;
+        capacity = columns * rows;
+    }
+    
+    public void setMapSize(int columns, int rows) {
+        this.columns = columns;
+        this.rows = rows;
+        this.capacity = columns * rows;
     }
 
     public double getDense() {
@@ -96,7 +112,8 @@ public class Map implements Serializable {
     }
     
     public void setMap(Map m) {
-        this.cells = m.getCells();
+        this.columns = m.getColumns();
+        this.rows = m.getRows();
         this.dense = m.getDense();
         this.capacity = m.getCapacity();
         this.density = m.getDensity();
@@ -108,7 +125,7 @@ public class Map implements Serializable {
     }
 
     public void setNewMap() {
-        this.map = new Node[cells][cells];
+        this.map = new Node[columns][rows];
     }
 
     public Node getStartNode() {
