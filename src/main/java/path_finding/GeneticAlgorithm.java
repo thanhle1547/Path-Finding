@@ -22,6 +22,10 @@ import java.util.stream.Collectors;
  *   </li>
  * </ol>
  * 
+ * <p>
+ * <b>Tiêu chí tối ưu:</b> đường đi ngắn nhất
+ * </p>
+ * 
  * @author thanhLe1547
  */
 public class GeneticAlgorithm {
