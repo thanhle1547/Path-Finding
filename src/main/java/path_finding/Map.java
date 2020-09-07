@@ -124,7 +124,7 @@ public class Map implements Serializable {
         this.map = m.getMap();
     }
 
-    public void setNewMap() {
+    public void createNewMap() {
         this.map = new Node[columns][rows];
     }
 
