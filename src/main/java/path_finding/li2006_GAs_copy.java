@@ -1,6 +1,7 @@
 package path_finding;
 
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 /**
@@ -10,19 +11,15 @@ import java.util.Random;
  * and applications, ISDA ’06; <b>2006</b> của <i>Li Q, Zhang W, Yin Y, Wang Z,
  * Liu G.</i>
  * 
- * <p>
- * <b>Tiêu chí tối ưu:</b> đường đi ngắn nhất
- * </p>
- * 
  * @author thanhLe1547
  */
-public class li2006_GAs extends GeneticAlgorithm {
+public class li2006_GAs_copy extends GeneticAlgorithm {
     /**
      * Số lượng cá thể muốn chọn vào 1 nhóm để random trong bước `Chọn lọc`
      */
     int numOfSizeForSelect;
 
-    public li2006_GAs(Map m, ArrayList<Node> wallList, int cSize, int numOfSizeForSelect) {
+    public li2006_GAs_copy(Map m, ArrayList<Node> wallList, int cSize, int numOfSizeForSelect) {
         super(m, wallList, cSize);
         this.numOfSizeForSelect = numOfSizeForSelect;
     }
@@ -69,13 +66,11 @@ public class li2006_GAs extends GeneticAlgorithm {
             endNode = this.finishNode, 
             wallNode;
         ArrayList<Node> chromosome = new ArrayList<>();
-        ArrayList<Node> wallNodeList,
-                        freeNodeList;
+        ArrayList<Node> wallNodeList;
 
         chromosome.add(startNode);
         chromosome.add(finishNode);
         wallNodeList = getIntersectWallNode(startNode, endNode);
-        freeNodeList = new ArrayList<>();
 
         if (!isIntersectObstacle(startNode, endNode, map))
             return chromosome;
@@ -87,54 +82,28 @@ public class li2006_GAs extends GeneticAlgorithm {
                     if (wallNodeList.size() == 0 && chromosome.size() > 2)
                         return chromosome;
                 }
-
                 wallNode = wallNodeList.get(rd.nextInt(wallNodeList.size()));
-                freeNodeList = getRedialNodeList(
+                chromosome.add(currIndex, getRedialNode(
                     startNode.getDirection(endNode), 
                     startNode, 
                     wallNode
-                );
-                
-                chromosome.add(currIndex, freeNodeList.get(rd.nextInt(freeNodeList.size())));
-
-                // for (int i = 0; i < chromosome.size(); i++) {
-                //     if (isIntersectObstacle(chromosome.get(i), chromosome.get(i + 1), map)) {
-                //         startNode = chromosome.get(i);
-                //         endNode = chromosome.get(i + 1);
-                //         currIndex = i + 1;
-                //         break;
-                //     }
-                // }
+                ));
                 currIndex++;
                 startNode = chromosome.get(currIndex - 1); // ~ size - 2
                 endNode = chromosome.get(currIndex); // ~ size - 1
                 hasAddedNode = true;
-            } catch (IndexOutOfBoundsException | IllegalArgumentException e) {
+            } catch (NoSuchElementException e) {
                 hasAddedNode = false;
             }
         }
     }
 
     /**
-     * Chọn lọc 
-     * <p>Các phương pháp được sử dụng:</p>
-     * <ul>
-     *  <li>Tournament Selection</li>
-     *  <li>
-     *      Elitism
-     *      @see <p><a href="https://www.researchgate.net/post/What_is_meant_by_the_term_Elitism_in_the_Genetic_Algorithm">
-     *              What is meant by the term Elitism in the Genetic Algorithm?
-     *          </a></p>
-     *          <p><a href="https://stackoverflow.com/questions/14622342/elitism-in-ga-should-i-let-the-elites-be-selected-as-parents?fbclid=IwAR3pYTT3Onyd_ZB-oMLGnrBi9ZOJpWM7X150P7Hau_ISx9uWxztVP9p7yCw">
-     *              Elitism in GA: Should I let the elites be selected as parents?
-     *          </a></p>
-     *  </li>
-     * </ul>
+     * Chọn lọc - Sử dụng phương pháp Tournament Selection
      */
     public void select() {
         int n = population.size(),
-            b = 0,      // indexOfCurrentBestFitness
-            e = 0;      // indexOfElite
+            b = 0;                  // indexBestFitness
         Random rd = new Random();
         ArrayList<ArrayList<Node>> newPopulation = new ArrayList<>();
         for (int i = 0; i < n; i++) {
@@ -146,20 +115,11 @@ public class li2006_GAs extends GeneticAlgorithm {
             }
             newPopulation.add(population.get(b));
             fitness.add(fitness.get(b));
-
-            if (fitness.get(i) > fitness.get(e))
-                e = i;
         }
-
-        ArrayList<Node> elite = new ArrayList<>(population.get(e));
-        population.add(elite);
-        
         population = newPopulation;
     }
 
-    protected ArrayList<Node> getRedialNodeList(Direction lineDirection, Node startNode, Node node)
-            throws IndexOutOfBoundsException
-    {
+    protected Node getRedialNode(Direction lineDirection, Node startNode, Node node) {
         // 2 dimensional array
 		// 	(-2, -2)                (0, -1)	            (2, -2)
 		// 		    NW (-1, -1)   N (0, -1)	  NE (1, -1)
@@ -168,7 +128,54 @@ public class li2006_GAs extends GeneticAlgorithm {
 		// 	(-2, 2)                 (0, 2)              (2, 2)
         Node n1 = node, 
             n2 = node;
-        ArrayList<Node> freeNodeList = new ArrayList<>();
+        int step = 1,
+            x1, y1, x2, y2;
+        boolean hasStNodeOutBound = false,
+                hasNdNodeOutBound = false;
+
+        if (lineDirection.name().length() == 1) {
+            x1 = lineDirection.getY();
+            y1 = lineDirection.getX();
+            x2 = - lineDirection.getY();
+            y2 = - lineDirection.getX();
+        } else {
+            x1 = lineDirection.getX();
+            y1 = - lineDirection.getY();
+            x2 = - lineDirection.getX();
+            y2 = lineDirection.getY();
+        }
+
+        while (true) {
+            if (hasStNodeOutBound && hasNdNodeOutBound)
+                throw new NoSuchElementException();
+
+            if (!hasStNodeOutBound) {
+                try {
+                    n1 = map[node.getX() + (x1 * step)][node.getY() + (y1 * step)];
+                    if (n1.getType() == 3 && !isIntersectObstacle(startNode, n1, map))
+                        return n1;
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    hasStNodeOutBound = true;
+                }
+            }
+            
+            if (!hasNdNodeOutBound) {
+                try {
+                    n2 = map[node.getX() + (x2 * step)][node.getY() + (y2 * step)];
+                    if (n2.getType() == 3 && !isIntersectObstacle(startNode, n2, map))
+                        return n2;
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    hasNdNodeOutBound = true;
+                }
+            }
+            
+            step++;
+        }
+    }
+
+    protected Node getRedialNode2(Direction lineDirection, Node startNode, Node node) {
+        Node n1 = node, 
+            n2 = node;
         int step = 1,
             x1, y1, x2, y2;
         boolean hasStNodeOutBound = false,
@@ -190,14 +197,14 @@ public class li2006_GAs extends GeneticAlgorithm {
 
         while (true) {
             if (hasStNodeOutBound && hasNdNodeOutBound)
-                break;
+                throw new NoSuchElementException();
 
             if (!hasStNodeOutBound) {
                 try {
                     n1 = map[node.getX() + (x1 * step)][node.getY() + (y1 * step)];
                     if (n1.getType() == 3) {
                         if (!isIntersectObstacle(startNode, n1, map))
-                            freeNodeList.add(n1);
+                            return n1;
                         isStNodeFound = true;
                     }
                     else if (isStNodeFound)
@@ -212,7 +219,7 @@ public class li2006_GAs extends GeneticAlgorithm {
                     n2 = map[node.getX() + (x2 * step)][node.getY() + (y2 * step)];
                     if (n2.getType() == 3) {
                         if (!isIntersectObstacle(startNode, n2, map))
-                            freeNodeList.add(n2);
+                            return n2;
                         isNdNodeFound = true;
                     } 
                     else if (isNdNodeFound)
@@ -224,7 +231,5 @@ public class li2006_GAs extends GeneticAlgorithm {
             
             step++;
         }
-
-        return freeNodeList;
     }
 }

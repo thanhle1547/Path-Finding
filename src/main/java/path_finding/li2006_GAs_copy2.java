@@ -10,19 +10,15 @@ import java.util.Random;
  * and applications, ISDA ’06; <b>2006</b> của <i>Li Q, Zhang W, Yin Y, Wang Z,
  * Liu G.</i>
  * 
- * <p>
- * <b>Tiêu chí tối ưu:</b> đường đi ngắn nhất
- * </p>
- * 
  * @author thanhLe1547
  */
-public class li2006_GAs extends GeneticAlgorithm {
+public class li2006_GAs_copy2 extends GeneticAlgorithm {
     /**
      * Số lượng cá thể muốn chọn vào 1 nhóm để random trong bước `Chọn lọc`
      */
     int numOfSizeForSelect;
 
-    public li2006_GAs(Map m, ArrayList<Node> wallList, int cSize, int numOfSizeForSelect) {
+    public li2006_GAs_copy2(Map m, ArrayList<Node> wallList, int cSize, int numOfSizeForSelect) {
         super(m, wallList, cSize);
         this.numOfSizeForSelect = numOfSizeForSelect;
     }
@@ -63,7 +59,6 @@ public class li2006_GAs extends GeneticAlgorithm {
      */
     public ArrayList<Node> initChromosome() {
         Random rd = new Random();
-        int currIndex = 1;
         boolean hasAddedNode = false;
         Node startNode = this.startNode, 
             endNode = this.finishNode, 
@@ -91,23 +86,13 @@ public class li2006_GAs extends GeneticAlgorithm {
                 wallNode = wallNodeList.get(rd.nextInt(wallNodeList.size()));
                 freeNodeList = getRedialNodeList(
                     startNode.getDirection(endNode), 
-                    startNode, 
-                    wallNode
+                    wallNode, 
+                    endNode 
                 );
                 
-                chromosome.add(currIndex, freeNodeList.get(rd.nextInt(freeNodeList.size())));
+                chromosome.add(1, freeNodeList.get(rd.nextInt(freeNodeList.size())));
 
-                // for (int i = 0; i < chromosome.size(); i++) {
-                //     if (isIntersectObstacle(chromosome.get(i), chromosome.get(i + 1), map)) {
-                //         startNode = chromosome.get(i);
-                //         endNode = chromosome.get(i + 1);
-                //         currIndex = i + 1;
-                //         break;
-                //     }
-                // }
-                currIndex++;
-                startNode = chromosome.get(currIndex - 1); // ~ size - 2
-                endNode = chromosome.get(currIndex); // ~ size - 1
+                endNode = chromosome.get(1);
                 hasAddedNode = true;
             } catch (IndexOutOfBoundsException | IllegalArgumentException e) {
                 hasAddedNode = false;
@@ -116,25 +101,11 @@ public class li2006_GAs extends GeneticAlgorithm {
     }
 
     /**
-     * Chọn lọc 
-     * <p>Các phương pháp được sử dụng:</p>
-     * <ul>
-     *  <li>Tournament Selection</li>
-     *  <li>
-     *      Elitism
-     *      @see <p><a href="https://www.researchgate.net/post/What_is_meant_by_the_term_Elitism_in_the_Genetic_Algorithm">
-     *              What is meant by the term Elitism in the Genetic Algorithm?
-     *          </a></p>
-     *          <p><a href="https://stackoverflow.com/questions/14622342/elitism-in-ga-should-i-let-the-elites-be-selected-as-parents?fbclid=IwAR3pYTT3Onyd_ZB-oMLGnrBi9ZOJpWM7X150P7Hau_ISx9uWxztVP9p7yCw">
-     *              Elitism in GA: Should I let the elites be selected as parents?
-     *          </a></p>
-     *  </li>
-     * </ul>
+     * Chọn lọc - Sử dụng phương pháp Tournament Selection
      */
     public void select() {
         int n = population.size(),
-            b = 0,      // indexOfCurrentBestFitness
-            e = 0;      // indexOfElite
+            b = 0;                  // indexBestFitness
         Random rd = new Random();
         ArrayList<ArrayList<Node>> newPopulation = new ArrayList<>();
         for (int i = 0; i < n; i++) {
@@ -146,18 +117,11 @@ public class li2006_GAs extends GeneticAlgorithm {
             }
             newPopulation.add(population.get(b));
             fitness.add(fitness.get(b));
-
-            if (fitness.get(i) > fitness.get(e))
-                e = i;
         }
-
-        ArrayList<Node> elite = new ArrayList<>(population.get(e));
-        population.add(elite);
-        
         population = newPopulation;
     }
 
-    protected ArrayList<Node> getRedialNodeList(Direction lineDirection, Node startNode, Node node)
+    protected ArrayList<Node> getRedialNodeList(Direction lineDirection, Node node, Node endNode)
             throws IndexOutOfBoundsException
     {
         // 2 dimensional array
@@ -196,7 +160,7 @@ public class li2006_GAs extends GeneticAlgorithm {
                 try {
                     n1 = map[node.getX() + (x1 * step)][node.getY() + (y1 * step)];
                     if (n1.getType() == 3) {
-                        if (!isIntersectObstacle(startNode, n1, map))
+                        if (!isIntersectObstacle(n1, endNode, map))
                             freeNodeList.add(n1);
                         isStNodeFound = true;
                     }
@@ -211,7 +175,7 @@ public class li2006_GAs extends GeneticAlgorithm {
                 try {
                     n2 = map[node.getX() + (x2 * step)][node.getY() + (y2 * step)];
                     if (n2.getType() == 3) {
-                        if (!isIntersectObstacle(startNode, n2, map))
+                        if (!isIntersectObstacle(n2, endNode, map))
                             freeNodeList.add(n2);
                         isNdNodeFound = true;
                     } 
