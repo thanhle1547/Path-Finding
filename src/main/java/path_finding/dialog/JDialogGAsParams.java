@@ -31,12 +31,12 @@ public class JDialogGAsParams {
         message.add(spGenerationNumber);
     }
 
-    public void show() {
-        JOptionPane.showConfirmDialog(
+    public int show() {
+        return JOptionPane.showConfirmDialog(
             null, 
             message.toArray(),
             "Nhập các tham số cho thuật toán",
-            JOptionPane.DEFAULT_OPTION, // only `OK` button
+            JOptionPane.OK_CANCEL_OPTION,
             JOptionPane.PLAIN_MESSAGE
         );
     }

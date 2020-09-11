@@ -20,34 +20,34 @@ A* works similarly to dijkstra by creating a priority queue of nodes and then ad
 
 ## How to add your algorithm
 
-1. Go to the line 67 and add your algorithm name.
+1. Go to the line 76 and add your algorithm name.
 
 ```java
-67   private String[] algorithms = { "GAs", "Dijkstra", "A*" };
+76   private String[] algorithms = { "GAs", "Dijkstra", "A*" };
 ```
 
-2. Add your (public) algorithm function inside of class Algorithm, line 704.
+1. Add your (public) algorithm function inside of class Algorithm, line 745.
 
 ```java
-704  class Algorithm {	//ALGORITHM CLASS
+745  class Algorithm {	//ALGORITHM CLASS
 ```
 
-3. Go to funtion ```startSearch()``` in line 499 and add a case (the number following the way you arranged in step 1) to call your function which you written in step 2. (```Alg``` is a instance of class ```Algorithm``` in line 704).
+3. Go to funtion ```startSearch()``` in line 542 and add a case (the number following the way you arranged in step 1) to call your function which you written in step 2. (```Alg``` is a instance of class ```Algorithm``` in line 745).
 
 ```java
-501  public void startSearch() {	//START STATE
+542  public void startSearch() {	//START STATE
 ...     // ... Other code
-503         switch(curAlg) {
-504             case 0:
-505                 Alg.GAs();
-506                 break;
-507             case 1:
-508                 Alg.Dijkstra();
-509                 break;
-510             case 2:
-511                 Alg.AStar();
-512                 break;
-513         }
+544         switch(curAlg) {
+545             case 0:
+546                 Alg.GAs();
+547                 break;
+548             case 1:
+549                 Alg.Dijkstra();
+550                 break;
+551             case 2:
+552                 Alg.AStar();
+553                 break;
+554         }
 ...     // ... Other code
 ```
 
@@ -69,14 +69,4 @@ A* works similarly to dijkstra by creating a priority queue of nodes and then ad
 
 ![control diasble](./screenshots/control-diasble.png)
 
-8. If you needs map size like 16x16, toggle comment 2 line of following code below
-
-```java
-78   JSlider size = new JSlider(1, 5, 2);
-79   // JSlider size = new JSlider(10, 50, 20);
-
-...  AND
-
-444  m.setCells(size.getValue() * 10);
-445  // m.setCells(size.getValue());
-```
+8. If you needs map size like 16x16 or 13x9, press <kbd>Alt</kbd> + <kbd>C</kbd> to open Custom map size dialog.

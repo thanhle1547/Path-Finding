@@ -60,10 +60,10 @@ public class GeneticAlgorithm {
     /**
      * Khởi tạo quần thể - Encoding of chromosomes: Decimal coding
      * 
-     * @param mapSize - size of map (2d array)
+     * @param mapCols - size of map (2d array)
      * @param capacity ~ size^2
      */
-    public void initPopulation(int size, int mapSize, int capacity) {
+    public void initPopulation(int size, int mapCols, int mapRows, int capacity) {
         population = new ArrayList<>();
         Random rd = new Random();
         for (int i = 0; i < size; i++) {
@@ -80,7 +80,7 @@ public class GeneticAlgorithm {
                 // https://stackoverflow.com/a/13001636
                 int x = rd.nextInt(capacity),
                     y =	rd.nextInt(capacity);
-                Node node = map[x % mapSize][y / mapSize];
+                Node node = map[x % mapCols][y / mapRows];
 
                 if (node.isSameWith(finishNode) && chromosome.size() > 1)
                     break;
