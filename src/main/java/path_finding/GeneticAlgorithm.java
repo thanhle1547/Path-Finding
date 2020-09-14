@@ -522,10 +522,26 @@ public class GeneticAlgorithm {
         return result.toString();
     }
     
+    public String[] dataToString() {
+        String[] result = new String[population.size()];
+        for (int i = 0; i < population.size(); i++) {
+            result[i] = String.valueOf(i + 1) + ".  "
+                    + dataToString(population.get(i), fitness.get(i));
+        }
+        return result;
+    }
+    
     public String bestIndvToString(boolean includeStringDataFormat) {
         return (includeStringDataFormat ? getStringDataFormat() : "")
             +   "Cá thể (tốt nhất):\n"
             +   dataToString(bestIndividual, bestIndvFitness);
+    }
+    
+    public String[] bestIndvToString() {
+        return new String[] {
+                "Cá thể (tốt nhất):\n"
+            +   dataToString(bestIndividual, bestIndvFitness)
+        };
     }
 
     public String getStringDataFormat() {
