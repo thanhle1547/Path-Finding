@@ -1,4 +1,19 @@
+<!-- omit in toc -->
 # Path Finding
+
+Keywords: _`mobile robot`, `autonomous mobile robots` `static environments`, `2-dimensional (2D) space`, `environmental modeling`, `path planning`_
+
+Từ khóa: _`rô bốt di động`, `rô bốt di động tự trị`, `môi trường tĩnh`, `không gian 2 chiều`, `mô hình hóa môi trường`, `lập lịch đường đi`_
+
+<!-- omit in toc -->
+## 🚩 Table of Contents
+- [Description](#description)
+  - [YouTube Video](#youtube-video)
+- [Dijkstra](#dijkstra)
+- [A*](#a)
+- [Draw a maze](#draw-a-maze)
+- [How to add your algorithm](#how-to-add-your-algorithm)
+- [Some usefull tips](#some-usefull-tips)
 
 ## Description
 This program provides a visual demonstration of the process undergone by Dijkstra, A* (A star) and GAs (Genetic Algorithm).
@@ -26,28 +41,28 @@ A* works similarly to dijkstra by creating a priority queue of nodes and then ad
 81   private String[] algorithms = { "GAs", "Dijkstra", "A*" };
 ```
 
-1. Add your (public) algorithm function inside of class Algorithm, line 781.
+1. Add your (public) algorithm function inside of class Algorithm, line 783.
 
 ```java
-781  class Algorithm {	//ALGORITHM CLASS
+783  class Algorithm {	//ALGORITHM CLASS
 ```
 
-1. Go to funtion ```startSearch()``` in line 577 and add a case (the number following the way you arranged in step 1) to call your function which you written in step 2. (```Alg``` is a instance of class ```Algorithm```).
+1. Go to funtion ```startSearch()``` in line 578 and add a case (the number following the way you arranged in step 1) to call your function which you written in step 2. (```Alg``` is a instance of class ```Algorithm```).
 
 ```java
-577  public void startSearch() {	//START STATE
+578  public void startSearch() {	//START STATE
 ...     // ... Other code
-579         switch(curAlg) {
-580             case 0:
-581                 Alg.GAs();
-582                 break;
-583             case 1:
-584                 Alg.Dijkstra();
-585                 break;
-586             case 2:
-587                 Alg.AStar();
-588                 break;
-589         }
+580         switch(curAlg) {
+581             case 0:
+582                 Alg.GAs();
+583                 break;
+584             case 1:
+585                 Alg.Dijkstra();
+586                 break;
+587             case 2:
+588                 Alg.AStar();
+589                 break;
+590         }
 ...     // ... Other code
 ```
 
@@ -71,8 +86,8 @@ A* works similarly to dijkstra by creating a priority queue of nodes and then ad
 
 8. If you needs map size like 16x16 or 13x9, press <kbd>Alt</kbd> + <kbd>C</kbd> to open Custom map size dialog.
 
-9.  To show the tab **Path list** first, change value 0 &rarr; 1 in the line 429.
+9.  To show the tab **Path list** first, change value 0 &rarr; 1 in the line 430.
     
 ```java
-429  tabbedPane.setSelectedIndex(0);
+430  tabbedPane.setSelectedIndex(0);
 ```

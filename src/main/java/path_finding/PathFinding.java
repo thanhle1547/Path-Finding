@@ -90,7 +90,6 @@ public class PathFinding {
 	Random r = new Random();
 	// SLIDERS
 	JSlider size = new JSlider(1, 5, 2);
-	// JSlider size = new JSlider(10, 50, 20);
 	JSlider speed = new JSlider(0, 500, delay);
 	JSlider obstacles = new JSlider(1, 100, 50);
 	// LABELS
@@ -324,6 +323,7 @@ public class PathFinding {
 
 		// Map Panel
 		imExportP.setBounds(22, space, 155, 35);
+		importB.setMnemonic(KeyEvent.VK_I);
 		imExportP.add(importB);
 		imExportP.add(exportB);
 		mapP.add(imExportP);
@@ -356,6 +356,7 @@ public class PathFinding {
 
 		obstacleL.setBounds(15, space, 100, 25);
 		mapP.add(obstacleL);
+		obstacles.setToolTipText("Obstacles density (Generate Map function)");
 		obstacles.setMajorTickSpacing(5);
 		obstacles.setBounds(50, space, 100, 25);
 		mapP.add(obstacles);
@@ -627,6 +628,7 @@ public class PathFinding {
 		solving = false;
 		length = 0;
 		checks = 0;
+		textArea.setText(null);
 		pathList.clear();
 		pathT.clearData();
 	}
