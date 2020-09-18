@@ -16,6 +16,7 @@ import java.awt.event.MouseMotionListener;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 import javax.swing.JFrame;
@@ -815,9 +816,9 @@ public class PathFinding {
 				return;
 			}
 
-			GeneticAlgorithm alg 
-					// = new GeneticAlgorithm(m, wallList, CSIZE, dialog.getPenaltyValue());
-					= new li2006_GAs(m, wallList, CSIZE, dialog.getNumOfSizeForSelect());
+			// GeneticAlgorithm alg = new GeneticAlgorithm(m, wallList, CSIZE, dialog.getPenaltyValue());
+			li2006_GAs alg = new li2006_GAs(m, wallList, CSIZE, dialog.getNumOfSizeForSelect());
+			alg.setCommonParams(dialog.getCrossoverProbability(), dialog.getMutationProbability());
 			int generation = 0;
 
 			alg.initPopulation(dialog.getPopulationSize(), columns, rows, m.getCapacity());
@@ -826,62 +827,86 @@ public class PathFinding {
 			textArea.setText(alg.getStringDataFormat());
 			setEnableWorkableComponents(false);
 			delay();
-			while (solving) {
-				if (generation == dialog.getGenerationNumber()) {
-					solving = false;
-					break;
+			try {
+				while (solving) {
+					if (generation == dialog.getGenerationNumber()) {
+						solving = false;
+						break;
+					}
+
+					textArea.append("  -  Thế hệ F" + generation + ":\n");
+
+					Update();
+					delay();
+
+					alg.evaluate();
+					textArea.append("    +,  Kq sau khi đánh giá:\n");
+					pathList = alg.getPopulation();
+					textArea.append(alg.dataToString(false));
+					Update();
+					delay();
+
+					alg.select();
+					textArea.append("    +,  Kq sau khi chọn lọc:\n");
+					pathList = alg.getPopulation();
+					textArea.append(alg.dataToString(false));
+					Update();
+					delay();
+
+					alg.crossover();
+					textArea.append("    +,  Kq sau khi lai ghép:\n");
+					pathList = alg.getPopulation();
+					textArea.append(alg.dataToString(false));
+					Update();
+					delay();
+
+					alg.mutation();
+					textArea.append("    +,  Kq sau khi đột biến:\n");
+					pathList = alg.getPopulation();
+					textArea.append(alg.dataToString(false));
+					Update();
+					delay();
+
+					alg.refinement();
+					textArea.append("    +,  Kq sau khi làm mịn:\n");
+					pathList = alg.getPopulation();
+					textArea.append(alg.dataToString(false));
+					Update();
+					delay();
+
+					alg.deletion();
+					textArea.append("    +,  Kq sau khi xóa bỏ nút dư thừa:\n");
+					pathList = alg.getPopulation();
+					textArea.append(alg.dataToString(false));
+					Update();
+					delay();
+
+					generation++;
+
+					textArea.append("-- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n\n");
 				}
-
-				textArea.append("  -  Thế hệ F" + generation + ":\n");
-
-				Update();
+				setEnableWorkableComponents(true);
 				delay();
 
-				alg.evaluate();
-				textArea.append("    +,  Kq sau khi đánh giá:\n");
-				pathList = alg.getPopulation();
+				alg.selectBestOnce();
+				pathList = alg.getBestIndvAsPopulation();
+				textArea.append(alg.bestIndvToString(false));
+				textArea.append(
+						"-- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n"
+						+ "Thế hệ cuối:\n"
+				);
 				textArea.append(alg.dataToString(false));
+				length = round(alg.getBestIndvFitness(), 2);
 				Update();
-				delay();
-
-				alg.select();
-				textArea.append("    +,  Kq sau khi chọn lọc:\n");
-				pathList = alg.getPopulation();
-				textArea.append(alg.dataToString(false));
-				Update();
-				delay();
-
-				alg.crossover();
-				textArea.append("    +,  Kq sau khi lai ghép:\n");
-				pathList = alg.getPopulation();
-				textArea.append(alg.dataToString(false));
-				Update();
-				delay();
-
-				alg.mutation();
-				textArea.append("    +,  Kq sau khi đột biến:\n");
-				pathList = alg.getPopulation();
-				textArea.append(alg.dataToString(false));
-				Update();
-				delay();
-
-				generation++;
-
-				textArea.append("-- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n\n");
+			} catch (NoSuchElementException e) {
+				JOptionPane.showMessageDialog(
+					frame, 
+					"Có thế tỉ lệ lai ghép hoặc đột biến thấp dẫn đến\n"
+					+ "không còn phần tử nào trong quần thể được chọn",
+					"Lỗi",
+					JOptionPane.ERROR_MESSAGE
+				);
 			}
-			setEnableWorkableComponents(true);
-			delay();
-
-			alg.selectBestOnce();
-			pathList = alg.getBestIndvAsPopulation();
-			textArea.append(alg.bestIndvToString(false));
-			textArea.append(
-					"-- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n"
-					+ "Thế hệ cuối:\n"
-			);
-			textArea.append(alg.dataToString(false));
-			length = round(alg.getBestIndvFitness(), 2);
-			Update();
 		}
 		
 		public ArrayList<Node> sortQue(ArrayList<Node> sort) {	//SORT PRIORITY QUE

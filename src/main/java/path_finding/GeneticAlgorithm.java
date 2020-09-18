@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Thuật toán này sử dụng các phương pháp được đề xuất trong các bài báo khoa học (papers) sau:
@@ -38,6 +39,8 @@ public class GeneticAlgorithm {
     ArrayList<ArrayList<Node>> population;
     ArrayList<Double> fitness;
     int penaltyValue;
+    double crossoverPBTY;
+    double mutationPBTY;
 
     ArrayList<Node> bestIndividual; // OR bestChromosome
     Double bestIndvFitness; // bestIndividualFitness
@@ -55,6 +58,11 @@ public class GeneticAlgorithm {
     public GeneticAlgorithm(Map m, ArrayList<Node> wallList, int cSize, int penaltyValue) {
         this(m, wallList, cSize);
         this.penaltyValue = penaltyValue;
+    }
+
+    public void setCommonParams(int crossoverPBTY, int mutationPBTY) {
+        this.crossoverPBTY = crossoverPBTY / 100.0;
+        this.mutationPBTY = mutationPBTY / 100.0;
     }
 
     /**
@@ -155,7 +163,8 @@ public class GeneticAlgorithm {
      *          Phương thức này sẽ lần lượt gọi lại hàm đánh giá (evaluate) và chọn lọc (select)
      *      </li>
      *      <li>
-     *          Kết quả cuối cùng có thể sẽ ko tối ưu vì trong bước lai ghép ko đánh giá cá thể con
+     *          Kết quả cuối cùng có thể sẽ ko tối ưu vì trong bước lai ghép ko đánh giá cá thể con 
+     *          HOẶC trong bước chọn lọc không loại bỏ hoàn toàn các cá thể ko khả thi
      *      </li>
      *  </ol>
      * </p>
@@ -179,14 +188,19 @@ public class GeneticAlgorithm {
      *      <p>Đề xuất sử dụng phương pháp one-point crossover operation</p>
      */
     public void crossover() {
-        ArrayList<ArrayList<Node>> clone = new ArrayList<>(population);
-        for (int i = 0; i < population.size(); i += 2) {
+        // sortPopulation();
+        int breakpoint = (int) (crossoverPBTY * population.size());
+        ArrayList<ArrayList<Node>> subList = new ArrayList<>(population.subList(0, breakpoint));
+        ArrayList<ArrayList<Node>> cloneP = new ArrayList<>(subList);
+        ArrayList<Double> cloneF = new ArrayList<>(fitness.subList(0, breakpoint));
+
+        for (int i = 0; i < subList.size(); i += 2) {
             ArrayList<Node> parent_1, parent_2;
             try {
-                parent_1 = population.get(i);
-                parent_2 = population.get(i + 1);
+                parent_1 = subList.get(i);
+                parent_2 = subList.get(i + 1);
             } catch (IndexOutOfBoundsException e) {
-                return;
+                break;
             }
             
             // index of the common node
@@ -260,18 +274,25 @@ public class GeneticAlgorithm {
             child_1.addAll(isInterconnectedUsed ? --i1 : i1, parent_1.subList(i1, parent_1.size()));
             child_2.addAll(isInterconnectedUsed ? --i2 : i2, parent_2.subList(i2, parent_2.size()));
             
-            clone.add(child_1);
-            clone.add(child_2);
+            cloneP.add(child_1);
+            cloneF.add(evaluate(child_1));
+            cloneP.add(child_2);
+            cloneF.add(evaluate(child_2));
         }
 
-        population = clone;
+        subList = new ArrayList<>(population.subList(breakpoint, population.size()));
+        cloneP.addAll(subList);
+        population = cloneP;
+
+        cloneF.addAll(fitness.subList(breakpoint, fitness.size()));
+        fitness = cloneF;
     }
     
     /**
      * Đột biến
      * 
      * @see <p>
-     *          Bài báo số 1 đã được đề cập, 
+     *          Bài báo số 2 đã được đề cập, 
      *          mục <code>3. A new mutation operator for path planning</code>
      *      </p>
      *      <ol>
@@ -290,13 +311,18 @@ public class GeneticAlgorithm {
      *      </ol>
      */
     public void mutation() {
-        ArrayList<ArrayList<Node>> clone = new ArrayList<>(population);
+        // sortPopulation();
+        int breakpoint = (int) (mutationPBTY * population.size());
+        ArrayList<ArrayList<Node>> subList = 
+                new ArrayList<>(population.subList(breakpoint, population.size()));
+        ArrayList<ArrayList<Node>> clone = new ArrayList<>(subList);
+
         Random rd = new Random();
         boolean isMutate;
         int nodeIndex;
         Node selectedNode, nodeBefore, nodeAfter;
         ArrayList<ArrayList<Node>> offsprings = new ArrayList<>();
-        ArrayList<Double> fitness = new ArrayList<>();
+        ArrayList<Double> offspringsF = new ArrayList<>();
         Double lowerFitness;
         int indexLowerFitness;
 
@@ -307,10 +333,10 @@ public class GeneticAlgorithm {
         Direction dirn; 
         */
 
-        for (int i = 0; i < population.size(); i++) {
+        for (int i = 0; i < subList.size(); i++) {
             isMutate = rd.nextBoolean();
             if (isMutate) {
-                ArrayList<Node> chromosome = population.get(i);
+                ArrayList<Node> chromosome = subList.get(i);
                 // Từ bài báo số 2
                 // random select a node  (not the start node or the goal node)
                 nodeIndex = rd.nextInt(chromosome.size() - 2) + 1;
@@ -342,17 +368,20 @@ public class GeneticAlgorithm {
                 if (offsprings.isEmpty())
                     continue;
                 
-                evaluate(offsprings, fitness);
+                evaluate(offsprings, offspringsF);
 
-                lowerFitness = Collections.min(fitness);
-                indexLowerFitness = fitness.indexOf(lowerFitness);
+                lowerFitness = Collections.min(offspringsF);
+                indexLowerFitness = offspringsF.indexOf(lowerFitness);
                 clone.set(i, offsprings.get(indexLowerFitness));
+                fitness.set(breakpoint + i, lowerFitness);
 
                 offsprings.clear();
-                fitness.clear();
+                offspringsF.clear();
             }
         }
 
+        subList = new ArrayList<>(population.subList(0, breakpoint));
+        clone.addAll(0, subList);
         population = clone;
     }
 
@@ -363,6 +392,29 @@ public class GeneticAlgorithm {
         int center = 4; // vicinityNodes.size() / 2 + 1;
         Node substituteNode = vicinityNodes.get(center);
     } */
+
+    /**
+     * @see <a href="https://stackoverflow.com/a/35718576">
+     *          Get the indices of an array after sorting?
+     *      </a>
+     */
+    protected void sortPopulation() 
+    {
+        ArrayList<ArrayList<Node>> cloneP = new ArrayList<>();
+        int[] sortedIndices;
+
+        Collections.sort(fitness);
+        sortedIndices = IntStream.range(0, fitness.size()).boxed()
+                .sorted((i, j) -> fitness.get(i).compareTo(fitness.get(j)))
+                .mapToInt(e -> e)
+                .toArray();
+
+        for (int k : sortedIndices) {
+            cloneP.add(population.get(k));
+        }
+
+        population = cloneP;
+    }
 
     protected boolean isIntersectObstacle(ArrayList<Node> chromosome) {
         for (int i = 1; i < chromosome.size() - 1; i++)

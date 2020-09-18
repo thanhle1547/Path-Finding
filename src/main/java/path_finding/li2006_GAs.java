@@ -1,6 +1,7 @@
 package path_finding;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 /**
@@ -137,24 +138,83 @@ public class li2006_GAs extends GeneticAlgorithm {
             e = 0;      // indexOfElite
         Random rd = new Random();
         ArrayList<ArrayList<Node>> newPopulation = new ArrayList<>();
+        ArrayList<Double> newFitness = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             b = 0;
             for (int j = 0; j < numOfSizeForSelect; j++) {
                 int rdIndex = rd.nextInt(n);
-                if (b == 0 || fitness.get(rdIndex) > fitness.get(b))
+                if (b == 0 || fitness.get(rdIndex) < fitness.get(b))
                     b = rdIndex;
             }
             newPopulation.add(population.get(b));
-            fitness.add(fitness.get(b));
+            newFitness.add(fitness.get(b));
 
-            if (fitness.get(i) > fitness.get(e))
+            // Không lấy TH = để tránh rơi vào TH cả quần thể giống nhau
+            if (fitness.get(i) < fitness.get(e))
                 e = i;
         }
 
-        ArrayList<Node> elite = new ArrayList<>(population.get(e));
-        population.add(elite);
+        if (e != 0) {
+            ArrayList<Node> elite = new ArrayList<>(population.get(e));
+            Double eliteF = Double.valueOf(fitness.get(e));
+            newPopulation.add(elite);
+            newFitness.add(eliteF);
+        }
         
         population = newPopulation;
+        fitness = newFitness;
+    }
+
+    /**
+     * <ul>
+     *    <li>Refinement operators</li>
+     *    <li>Other name: Smoothness Operator</li>
+     *    <li>Other name: Reduce the distance of paths</li>
+     * </ul>
+     */
+    public void refinement() {
+        ArrayList<ArrayList<Node>> cloneP = new ArrayList<>(population);
+        for (int i = 0; i < population.size(); i++) {
+            ArrayList<Node> chromosome = population.get(i), 
+                            cloneC = cloneP.get(i);
+            for (int j = 1; j < chromosome.size() - 1; j++) {
+                Node before = chromosome.get(j - 1),
+                    current = chromosome.get(j),
+                    after = chromosome.get(j + 1);
+                if (chromosome.get(j).getAngleBetween(before, after) == 90) {
+                    Node endOfBefore = getAdjacentToEndNode(before, current),
+                        endOfAfter = getAdjacentToEndNode(after, current);
+                    cloneC.remove(j);
+                    cloneC.add(j, endOfBefore);
+                    cloneC.add(j + 1, endOfAfter);
+                    j +=2;
+                }
+            }
+        }
+    }
+
+    /**
+     * Purpose: Reduce the length of chromosome.
+     * <p>
+     * The main idea is that if two non-conterminous nodes in a path can be
+     * connected without obstacle, the intermediate nodes between them are
+     * redundant. Therefore, these intermediate nodes can be deleted.
+     * </p>
+     */
+    public void deletion() {
+        ArrayList<ArrayList<Node>> cloneP = new ArrayList<>(population);
+        for (int i = 0; i < population.size(); i++) {
+            ArrayList<Node> chromosome = population.get(i), cloneC = cloneP.get(i);
+            ArrayList<Integer> indices = new ArrayList<>();
+            for (int j = 1; j < chromosome.size() - 1; j++)
+                if (!isIntersectObstacle(chromosome.get(j - 1), chromosome.get(j + 1), map))
+                    indices.add(j);
+
+            Collections.reverse(indices);
+            indices.forEach(k -> {
+                cloneC.remove((int) k);
+            });
+        }
     }
 
     protected ArrayList<Node> getRedialNodeList(Direction lineDirection, Node startNode, Node node)
@@ -226,5 +286,16 @@ public class li2006_GAs extends GeneticAlgorithm {
         }
 
         return freeNodeList;
+    }
+
+    /**
+     * Get the node which is adjacent to goal/end/target node
+     * @param startNode need for get the direction of the line
+     */
+    protected Node getAdjacentToEndNode(Node startNode, Node endNode) {
+        Direction dir = startNode.getDirection(endNode);
+        int x = endNode.getX() + (- dir.getX()),
+            y = endNode.getY() + (- dir.getY());
+        return map[x][y];
     }
 }

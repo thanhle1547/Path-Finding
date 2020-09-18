@@ -113,6 +113,18 @@ class Node implements Serializable, Cloneable {
 		return d == "" ? Direction.CENTER : Direction.valueOf(d);
 	}
 
+	
+	/**
+	 * @see <a href="https://stackoverflow.com/a/3366569">
+	 * 			Calculating the angle between two lines without having to calculate the slope? (Java)
+	 * 		</a>
+	 */
+	public int getAngleBetween(Node before, Node after) {
+		double angle1 = Math.atan2(before.getY() - y, before.getX() - x);
+		double angle2 = Math.atan2(y - after.getY(), x - after.getX());
+		return (int) (angle1 - angle2);
+	}
+
 	/**
 	 * @author thanhLe1547
 	 */
