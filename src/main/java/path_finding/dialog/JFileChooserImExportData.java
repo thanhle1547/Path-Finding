@@ -33,11 +33,9 @@ abstract public class JFileChooserImExportData {
         this.action = action;
 
         fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle(action == ACTION.IMPORT ? "Nhập file" : "Xuất file");
+        fileChooser.setDialogTitle(action == ACTION.IMPORT ? "Import file" : "Export file");
         if (action == ACTION.EXPORT)
             fileChooser.setSelectedFile(new File("Untitled.jmap"));
-        // else
-        //     fileChooser.setApproveButtonText("Import");
         fileChooser.addChoosableFileFilter(javaMapFileFilter);
         fileChooser.setFileFilter(javaMapFileFilter);
     }

@@ -70,15 +70,15 @@ public class JDialogCustomMapSize implements ChangeListener {
 
         JPanel pNxN = new JPanel();
         ((JSpinner.DefaultEditor) spNxN.getEditor()).getTextField().setColumns(4);
-        pNxN.add(getSliderPanel(getJSlider(slNxN, spNxN), spNxN, "Số cột và hàng (n)"));
+        pNxN.add(getSliderPanel(getJSlider(slNxN, spNxN), spNxN, "Number of columns and rows (n)"));
 
         JPanel pMxN = new JPanel();
         BoxLayout boxLayout = new BoxLayout(pMxN, BoxLayout.Y_AXIS);
         pMxN.setLayout(boxLayout);
         ((JSpinner.DefaultEditor) spColumns.getEditor()).getTextField().setColumns(4);
         ((JSpinner.DefaultEditor) spRows.getEditor()).getTextField().setColumns(4);
-        pMxN.add(getSliderPanel(getJSlider(slColumns, spColumns), spColumns, "Số cột (m)"));
-        pMxN.add(getSliderPanel(getJSlider(slRows, spRows), spRows, "Số hàng (n)"));
+        pMxN.add(getSliderPanel(getJSlider(slColumns, spColumns), spColumns, "Number of columns (m)"));
+        pMxN.add(getSliderPanel(getJSlider(slRows, spRows), spRows, "Number of rows (n)"));
 
         pCard.add(pNxN, NxN_Size);
         pCard.add(pMxN, MxN_Size);
@@ -127,6 +127,12 @@ public class JDialogCustomMapSize implements ChangeListener {
                 spinner.setValue(slider.getValue());
             }
         });
+        spinner.addChangeListener(new ChangeListener(){
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                slider.setValue((int) spinner.getValue());
+            }
+        });
 
         return slider;
     }
@@ -135,6 +141,7 @@ public class JDialogCustomMapSize implements ChangeListener {
         JPanel panel = new JPanel(new BorderLayout(0, 8));
         panel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
         panel.add(new JLabel(description), BorderLayout.LINE_START);
+        panel.add(new JLabel("        "), BorderLayout.CENTER);
         panel.add(spinner, BorderLayout.LINE_END);
         panel.add(slider, BorderLayout.PAGE_END);
 

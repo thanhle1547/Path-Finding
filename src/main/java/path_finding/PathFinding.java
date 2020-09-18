@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -34,12 +35,16 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import path_finding.dialog.JDialogCustomMapSize;
 // import path_finding.dialog.JDialogMyCustomGAsParams;
@@ -63,13 +68,13 @@ public class PathFinding {
 	// GENERAL VARIABLES
 	private Map m = new Map();
 	private int columns = m.getColumns();
-    private int rows = m.getRows();
+	private int rows = m.getRows();
 	private int delay = 30;
 	private int tool = 0;
 	private int checks = 0;
 	private double length = 0;
 	private int curAlg = 0;
-	private int WIDTH = 1125; // 850;
+	private int WIDTH = 1145; // 850;
 	private final int HEIGHT = 650;
 	private final int MSIZE = 600;
 	private int CSIZE = MSIZE / (columns > rows ? columns : rows);
@@ -86,7 +91,6 @@ public class PathFinding {
 	Random r = new Random();
 	// SLIDERS
 	JSlider size = new JSlider(1, 5, 2);
-	// JSlider size = new JSlider(10, 50, 20);
 	JSlider speed = new JSlider(0, 500, delay);
 	JSlider obstacles = new JSlider(1, 100, 50);
 	// LABELS
@@ -100,7 +104,12 @@ public class PathFinding {
 	JLabel densityL = new JLabel(obstacles.getValue() + "%");
 	JLabel checkL = new JLabel("Checks: " + checks);
 	JLabel lengthL = new JLabel("Path Length: " + length);
-	JLabel textAreasL = new JLabel("Result");
+	JLabel tableL = new JLabel(
+			"<html><nobr><b><font color=red>Tips:</font></b><br>"
+		+ 	"&nbsp;&nbsp;+ Ctrl + Click chuột trái để bỏ chọn<br>"
+		+ 	"&nbsp;&nbsp;+ Dùng phím mũi tên để chọn sẽ không<br>"
+		+	"chính xác bằng chuột</nobr></html>"
+	);
 	// BUTTONS
 	JButton searchB = new JButton("Start Search");
 	JButton resetB = new JButton("Reset");
@@ -113,14 +122,17 @@ public class PathFinding {
 	JComboBox<String> toolBx = new JComboBox<>(tools);
 	// TEXT AREAS
 	JTextArea textArea = new JTextArea();
-	JScrollPane scrollPane;
+	// TABLE
+	PathTable pathT = new PathTable();
 	// PANELS
 	JPanel menuBarP = new JPanel(new FlowLayout(FlowLayout.LEFT));
 	JPanel toolP = new JPanel();
 	JPanel ctrlsP = new JPanel();
 	JPanel mapP = new JPanel();
 	JPanel imExportP = new JPanel();
-	JPanel textP = new JPanel();
+	JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.WRAP_TAB_LAYOUT);
+	JPanel resultP = new JPanel(new BorderLayout());
+	JPanel pathListP = new JPanel(new BorderLayout());
 	// MENU
 	JMenuBar mapMB = new JMenuBar();
 	JMenu mapM = new JMenu("Map");
@@ -196,7 +208,7 @@ public class PathFinding {
 	private int getCenter(int coord) {
 		return (coord * CSIZE) + (CSIZE / 2);
 	}
-	
+
 	/**
 	 * @author thanhle1547
 	 */
@@ -242,9 +254,15 @@ public class PathFinding {
 	private void setEnableJPanel(JPanel panel, boolean state) {
 		Component[] components = panel.getComponents();
 		for (Component component : components) {
-			component.setEnabled(state);
 			if (component instanceof JPanel)
 				setEnableJPanel((JPanel) component, state);
+			if (component instanceof JScrollPane) {
+				JScrollPane pane = (JScrollPane) component;
+				pane.getHorizontalScrollBar().setEnabled(state);
+				pane.getVerticalScrollBar().setEnabled(state);
+				pane.getViewport().getView().setEnabled(state);
+			}
+			component.setEnabled(state);
 		}
 	}
 
@@ -257,6 +275,7 @@ public class PathFinding {
 		searchB.setEnabled(state);
 		algorithmsBx.setEnabled(state);
 		mapM.setEnabled(state);
+		setEnableJPanel(pathListP, state);
 	}
 
 	private void initialize() { // INITIALIZE THE GUI ELEMENTS
@@ -302,9 +321,10 @@ public class PathFinding {
 		customMapSizeMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
 		mapM.add(customMapSizeMI);
 		menuBarP.add(mapMB);
-		
+
 		// Map Panel
 		imExportP.setBounds(22, space, 155, 35);
+		importB.setMnemonic(KeyEvent.VK_I);
 		imExportP.add(importB);
 		imExportP.add(exportB);
 		mapP.add(imExportP);
@@ -337,6 +357,7 @@ public class PathFinding {
 
 		obstacleL.setBounds(15, space, 100, 25);
 		mapP.add(obstacleL);
+		obstacles.setToolTipText("Obstacles density (Generate Map function)");
 		obstacles.setMajorTickSpacing(5);
 		obstacles.setBounds(50, space, 100, 25);
 		mapP.add(obstacles);
@@ -391,20 +412,27 @@ public class PathFinding {
 		canvas.setBounds(230, 5, MSIZE + 1, MSIZE + 1);
 		frame.getContentPane().add(canvas);
 
+		// Tabbed Pane
+		JPanel rightP = new JPanel(new BorderLayout());
+		rightP.setBounds(845, 5, 275, MSIZE);
 		// Text Panel
-		textP.setLayout(null);
-		textP.setBounds(845, 10, 280, MSIZE);
-		space = 25;
-
-		textAreasL.setBounds(0, 0, 250, 25);
-		textP.add(textAreasL);
 		textArea.setLineWrap(true);
-        textArea.setWrapStyleWord(true);
-		scrollPane = new JScrollPane(textArea);
-		scrollPane.setBounds(0, space, 250, 570);
-		textP.add(scrollPane);
-		frame.getContentPane().add(textP);
-		
+		textArea.setWrapStyleWord(true);
+		resultP.add(new JScrollPane(textArea));
+		tabbedPane.addTab("Process/Result", resultP);
+		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
+		// Path List Panel
+		tableL.setBorder(new EmptyBorder(4, 4, 4, 4));
+		pathListP.add(tableL, BorderLayout.PAGE_START);
+		pathListP.add(new JScrollPane(pathT), BorderLayout.CENTER);
+		tabbedPane.addTab("Path list", pathListP);
+		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
+
+		tabbedPane.setSelectedIndex(0);
+		rightP.add(tabbedPane, BorderLayout.CENTER);
+
+		frame.getContentPane().add(rightP);
+
 		// ACTION LISTENERS
 		showMapNumCBMI.addItemListener(new ItemListener() {
 			@Override
@@ -432,7 +460,7 @@ public class PathFinding {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooserImportMap dialog = new JFileChooserImportMap(getParentComponent(e), m);
 				dialog.show();
-				
+
 				if (dialog.getResponse() == JFileChooser.CANCEL_OPTION)
 					return;
 
@@ -491,7 +519,7 @@ public class PathFinding {
 		obstacles.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
-				m.setDense((double)obstacles.getValue()/100);
+				m.setDense((double) obstacles.getValue() / 100);
 				Update();
 			}
 		});
@@ -522,6 +550,17 @@ public class PathFinding {
 			public void stateChanged(ChangeEvent e) {
 				delay = speed.getValue();
 				Update();
+			}
+		});
+		pathT.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				ArrayList<Node> path = pathT.getSelectedPath();
+				pathList.clear();
+				if (path != null)
+					pathList.add(path);
+
+				canvas.repaint();
 			}
 		});
 		creditMI.addActionListener(new ActionListener() {
@@ -590,7 +629,9 @@ public class PathFinding {
 		solving = false;
 		length = 0;
 		checks = 0;
+		textArea.setText(null);
 		pathList.clear();
+		pathT.clearData();
 	}
 	
 	public void delay() {	//DELAY METHOD
@@ -824,7 +865,7 @@ public class PathFinding {
 			alg.initPopulation(dialog.getPopulationSize(), columns, rows, m.getCapacity());
 			pathList = alg.getPopulation();
 
-			textArea.setText(alg.getStringDataFormat());
+			pathT.addTitle(alg.getStringDataFormat());
 			setEnableWorkableComponents(false);
 			delay();
 			try {
@@ -834,68 +875,92 @@ public class PathFinding {
 						break;
 					}
 
-					textArea.append("  -  Thế hệ F" + generation + ":\n");
+					pathT.addTitle("  -  Thế hệ F" + generation);
 
 					Update();
 					delay();
 
 					alg.evaluate();
-					textArea.append("    +,  Kq sau khi đánh giá:\n");
 					pathList = alg.getPopulation();
-					textArea.append(alg.dataToString(false));
+					pathT.addData(
+							"    +,  Kq sau khi đánh giá:", 
+							"danhgia/" + generation, 
+							pathList, 
+							alg.dataToString()
+					);
 					Update();
 					delay();
 
 					alg.select();
-					textArea.append("    +,  Kq sau khi chọn lọc:\n");
 					pathList = alg.getPopulation();
-					textArea.append(alg.dataToString(false));
+					pathT.addData(
+							"    +,  Kq sau khi chọn lọc:", 
+							"chonloc/" + generation, 
+							pathList, 
+							alg.dataToString()
+					);
 					Update();
 					delay();
 
 					alg.crossover();
-					textArea.append("    +,  Kq sau khi lai ghép:\n");
 					pathList = alg.getPopulation();
-					textArea.append(alg.dataToString(false));
+					pathT.addData(
+							"    +,  Kq sau khi lai ghép:", 
+							"laighep/" + generation, 
+							pathList, 
+							alg.dataToString()
+					);
 					Update();
 					delay();
 
 					alg.mutation();
-					textArea.append("    +,  Kq sau khi đột biến:\n");
 					pathList = alg.getPopulation();
-					textArea.append(alg.dataToString(false));
+					pathT.addData(
+							"    +,  Kq sau khi đột biến:", 
+							"dotbien/" + generation, 
+							pathList, 
+							alg.dataToString()
+					);
 					Update();
 					delay();
 
 					alg.refinement();
-					textArea.append("    +,  Kq sau khi làm mịn:\n");
 					pathList = alg.getPopulation();
-					textArea.append(alg.dataToString(false));
+					pathT.addData(
+							"    +,  Kq sau khi làm mịn:", 
+							"lammin/" + generation, 
+							pathList, 
+							alg.dataToString()
+					);
 					Update();
 					delay();
 
 					alg.deletion();
-					textArea.append("    +,  Kq sau khi xóa bỏ nút dư thừa:\n");
 					pathList = alg.getPopulation();
-					textArea.append(alg.dataToString(false));
+					pathT.addData(
+							"    +,  Kq sau khi xóa bỏ nút dư thừa:", 
+							"boduthua/" + generation, 
+							pathList, 
+							alg.dataToString()
+					);
 					Update();
 					delay();
 
 					generation++;
 
-					textArea.append("-- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n\n");
+					pathT.addTitle("-- -- -- -- -- -- -- -- -- -- -- -- -- -- --");
 				}
 				setEnableWorkableComponents(true);
 				delay();
 
 				alg.selectBestOnce();
 				pathList = alg.getBestIndvAsPopulation();
-				textArea.append(alg.bestIndvToString(false));
-				textArea.append(
-						"-- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n"
-						+ "Thế hệ cuối:\n"
+				pathT.addData(
+						null, 
+						"best/", 
+						pathList, 
+						alg.bestIndvToString()
 				);
-				textArea.append(alg.dataToString(false));
 				length = round(alg.getBestIndvFitness(), 2);
 				Update();
 			} catch (NoSuchElementException e) {
