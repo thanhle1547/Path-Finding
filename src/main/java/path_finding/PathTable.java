@@ -92,6 +92,7 @@ public class PathTable extends JTable {
 
     public void clearData() {
         data.clear();
+        model.setRowCount(0);
     }
 
     @Override
