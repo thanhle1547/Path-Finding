@@ -862,7 +862,8 @@ public class PathFinding {
 			alg.setCommonParams(dialog.getCrossoverProbability(), dialog.getMutationProbability());
 			int generation = 0;
 
-			alg.initPopulation(dialog.getPopulationSize(), columns, rows, m.getCapacity());
+			// alg.initPopulation(dialog.getPopulationSize(), columns, rows, m.getCapacity());
+			alg.initPopulation(dialog.getPopulationSize());
 			pathList = alg.getPopulation();
 
 			pathT.addTitle(alg.getStringDataFormat());

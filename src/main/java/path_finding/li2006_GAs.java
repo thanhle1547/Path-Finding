@@ -1,7 +1,6 @@
 package path_finding;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Random;
 
 /**
@@ -28,7 +27,7 @@ public class li2006_GAs extends GeneticAlgorithm {
         this.numOfSizeForSelect = numOfSizeForSelect;
     }
 
-    public void initPopulation(int size, int mapSize, int capacity) {
+    public void initPopulation(int size) {
         population = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             population.add(initChromosome());
@@ -169,28 +168,36 @@ public class li2006_GAs extends GeneticAlgorithm {
      * <ul>
      *    <li>Refinement operators</li>
      *    <li>Other name: Smoothness Operator</li>
-     *    <li>Other name: Reduce the distance of paths</li>
+     *    <li>Purpose: Reduce the distance of paths</li>
      * </ul>
      */
     public void refinement() {
         ArrayList<ArrayList<Node>> cloneP = new ArrayList<>(population);
         for (int i = 0; i < population.size(); i++) {
-            ArrayList<Node> chromosome = population.get(i), 
-                            cloneC = cloneP.get(i);
-            for (int j = 1; j < chromosome.size() - 1; j++) {
-                Node before = chromosome.get(j - 1),
-                    current = chromosome.get(j),
-                    after = chromosome.get(j + 1);
-                if (chromosome.get(j).getAngleBetween(before, after) == 90) {
-                    Node endOfBefore = getAdjacentToEndNode(before, current),
-                        endOfAfter = getAdjacentToEndNode(after, current);
-                    cloneC.remove(j);
-                    cloneC.add(j, endOfBefore);
-                    cloneC.add(j + 1, endOfAfter);
-                    j +=2;
+            ArrayList<Node> cloneC = cloneP.get(i);
+            boolean hasEnd = false;
+            while (!hasEnd) {
+                for (int j = 1; j < cloneC.size() - 1; j++) {
+                    Node before = cloneC.get(j - 1),
+                        current = cloneC.get(j),
+                        after = cloneC.get(j + 1);
+                    if (cloneC.get(j).getAngleBetween(before, after) == 90) {
+                        Node endOfBefore = getAdjacentToEndNode(before, current),
+                            endOfAfter = getAdjacentToEndNode(after, current);
+                        cloneC.remove(j);
+                        if (!cloneC.contains(endOfBefore))
+                            cloneC.add(j, endOfBefore);
+                        if (!cloneC.contains(endOfAfter))
+                            cloneC.add(j + 1, endOfAfter);
+                        break;
+                    }
+                    if (j == cloneC.size() - 2)
+                        hasEnd = true;
                 }
             }
+            cloneP.set(i, cloneC);
         }
+        population = cloneP;
     }
 
     /**
@@ -204,17 +211,21 @@ public class li2006_GAs extends GeneticAlgorithm {
     public void deletion() {
         ArrayList<ArrayList<Node>> cloneP = new ArrayList<>(population);
         for (int i = 0; i < population.size(); i++) {
-            ArrayList<Node> chromosome = population.get(i), cloneC = cloneP.get(i);
-            ArrayList<Integer> indices = new ArrayList<>();
-            for (int j = 1; j < chromosome.size() - 1; j++)
-                if (!isIntersectObstacle(chromosome.get(j - 1), chromosome.get(j + 1), map))
-                    indices.add(j);
-
-            Collections.reverse(indices);
-            indices.forEach(k -> {
-                cloneC.remove((int) k);
-            });
+            ArrayList<Node> cloneC = cloneP.get(i);
+            boolean hasEnd = false;
+            while (!hasEnd) {
+                for (int j = 1; j < cloneC.size() - 1; j++) {
+                    if (!isIntersectObstacle(cloneC.get(j - 1), cloneC.get(j + 1), map)) {
+                        cloneC.remove((int) j);
+                        break;
+                    }
+                    if (j == cloneC.size() - 2)
+                        hasEnd = true;
+                }
+            }
+            cloneP.set(i, cloneC);
         }
+        population = cloneP;
     }
 
     protected ArrayList<Node> getRedialNodeList(Direction lineDirection, Node startNode, Node node)

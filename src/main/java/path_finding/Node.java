@@ -120,9 +120,9 @@ class Node implements Serializable, Cloneable {
 	 * 		</a>
 	 */
 	public int getAngleBetween(Node before, Node after) {
-		double angle1 = Math.atan2(before.getY() - y, before.getX() - x);
-		double angle2 = Math.atan2(y - after.getY(), x - after.getX());
-		return (int) (angle1 - angle2);
+		double angle1 = Math.toDegrees(Math.atan2(before.getY() - y, before.getX() - x));
+		double angle2 = Math.toDegrees(Math.atan2(y - after.getY(), x - after.getX()));
+		return (int) Math.abs(angle1 - angle2);
 	}
 
 	/**
