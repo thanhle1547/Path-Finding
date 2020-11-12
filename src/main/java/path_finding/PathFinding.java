@@ -45,6 +45,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.apache.commons.lang3.time.StopWatch;
+
 import path_finding.dialog.JDialogCustomMapSize;
 // import path_finding.dialog.JDialogMyCustomGAsParams;
 import path_finding.dialog.JDialogli2006_GAsParams;
@@ -72,11 +74,13 @@ public class PathFinding {
 	private int tool = 0;
 	private int checks = 0;
 	private double length = 0;
+	private double elapsed = 0;
 	private int curAlg = 0;
 	private int WIDTH = 1145; // 850;
 	private final int HEIGHT = 650;
 	private final int MSIZE = 600;
 	private int CSIZE = MSIZE / (columns > rows ? columns : rows);
+	private StopWatch watch = new StopWatch();
 	// UTIL ARRAYS
 	private String[] algorithms = { "GAs", "Dijkstra", "A*" };
 	private String[] tools = { "Start", "Finish", "Wall", "Eraser" };
@@ -103,6 +107,7 @@ public class PathFinding {
 	JLabel densityL = new JLabel(obstacles.getValue() + "%");
 	JLabel checkL = new JLabel("Checks: " + checks);
 	JLabel lengthL = new JLabel("Path Length: " + length);
+	JLabel elapsedL = new JLabel("Elapsed Time: " + elapsed);
 	JLabel tableL = new JLabel(
 			"<html><nobr><b><font color=red>Tips:</font></b><br>"
 		+ 	"&nbsp;&nbsp;+ Ctrl + Click chuột trái để bỏ chọn<br>"
@@ -305,7 +310,7 @@ public class PathFinding {
 		// mapP.setBounds(0, 0, 210, 360);
 
 		ctrlsP.setLayout(null);
-		ctrlsP.setPreferredSize(new Dimension(210, 235));
+		ctrlsP.setPreferredSize(new Dimension(210, 260));
 		// ctrlsP.setBounds(0, 360, 210, 240);
 
 		// Tool Panel Menubar
@@ -397,6 +402,10 @@ public class PathFinding {
 
 		lengthL.setBounds(15, space, 180, 25);
 		ctrlsP.add(lengthL);
+		space += buff - 20;
+
+		elapsedL.setBounds(15, space, 180, 25);
+		ctrlsP.add(elapsedL);
 		space += buff - 10;
 
 		toolP.add(menuBarP);
@@ -615,6 +624,7 @@ public class PathFinding {
 		lengthL.setText("Path Length: " + length);
 		densityL.setText(obstacles.getValue() + "%");
 		checkL.setText("Checks: " + checks);
+		elapsedL.setText("Elapsed Time: " + elapsed);
 	}
 
 	public void updateWallList(Node node) {
@@ -628,14 +638,18 @@ public class PathFinding {
 		solving = false;
 		length = 0;
 		checks = 0;
+		elapsed = 0;
 		textArea.setText(null);
 		pathList.clear();
 		pathT.clearData();
+		watch.reset();
 	}
 	
 	public void delay() {	//DELAY METHOD
 		try {
+			if (watch.isStarted()) watch.suspend();
 			Thread.sleep(delay);
+			if (watch.isStarted()) watch.resume();
 		} catch(Exception e) {}
 	}
 	
@@ -861,6 +875,7 @@ public class PathFinding {
 					= new li2006_GAs(m, wallList, CSIZE, dialog.getNumOfSizeForSelect());
 			int generation = 0;
 
+			watch.start();
 			alg.initPopulation(dialog.getPopulationSize(), columns, rows, m.getCapacity());
 			pathList = alg.getPopulation();
 
@@ -926,6 +941,9 @@ public class PathFinding {
 
 				pathT.addTitle("-- -- -- -- -- -- -- -- -- -- -- -- -- -- --");
 			}
+			watch.stop();
+			elapsed = watch.getTime();
+			
 			setEnableWorkableComponents(true);
 			delay();
 
