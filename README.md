@@ -35,59 +35,67 @@ A* works similarly to dijkstra by creating a priority queue of nodes and then ad
 
 ## How to add your algorithm
 
-1. Go to the line 81 and add your algorithm name.
+1. Go to the line 85 and add your algorithm name.
 
 ```java
-81   private String[] algorithms = { "GAs", "Dijkstra", "A*" };
+85   private String[] algorithms = { "GAs", "Dijkstra", "A*" };
 ```
 
-1. Add your (public) algorithm function inside of class Algorithm, line 783.
+1. Add your (public) algorithm function inside of class Algorithm, line 797.
 
 ```java
-783  class Algorithm {	//ALGORITHM CLASS
+797  class Algorithm {	//ALGORITHM CLASS
 ```
 
-1. Go to funtion ```startSearch()``` in line 578 and add a case (the number following the way you arranged in step 1) to call your function which you written in step 2. (```Alg``` is a instance of class ```Algorithm```).
+1. Go to funtion ```startSearch()``` in line 587 and add a case (the number following the way you arranged in step 1) to call your function which you written in step 2. (```Alg``` is a instance of class ```Algorithm```).
 
 ```java
-578  public void startSearch() {	//START STATE
+587  public void startSearch() {	//START STATE
 ...     // ... Other code
-580         switch(curAlg) {
-581             case 0:
-582                 Alg.GAs();
-583                 break;
-584             case 1:
-585                 Alg.Dijkstra();
-586                 break;
-587             case 2:
-588                 Alg.AStar();
-589                 break;
-590         }
-...     // ... Other code
+589         switch(curAlg) {
+590             case 0:
+591                 Alg.GAs();
+592                 break;
+593             case 1:
+594                 Alg.Dijkstra();
+595                 break;
+596             case 2:
+597                 Alg.AStar();
+598                 break;
+599         }
 ```
 
 ## Some usefull tips
 
-1. If you wants to show the detail of processing or result of your algorithm, there is a instance of JTextArea (variable name ```textArea```) which you can call function setText()/append().
+1. To show the detail of processing or result of your algorithm, there is a instance of JTextArea (variable name ```textArea```) which you can call function setText()/append().
 
-2. Call ```Update()``` to repaint the canvas, then call ```delay()```, so you'll have time to see the changed.
+2. To show the length of the final path, assign value to variable ```length``` (type double, call ```round()``` function).
 
-3. If you wants to show the path length, assign value to variable ```length``` (type double, call ```round()``` function).
+3. To show how many cells/nodes have been checked by algorithm, assign value to variable ```checks``` (type int).
 
-4. If you wants to show how many cells have been checked by algorithm, assign value to variable ```checks``` (type int).
+4. To calculate & show elapsed time, add the following code:
 
-5. If you needs the wall list, there is a variable name ```wallList``` (type ArrayList\<Node\>).
+```java
+...  watch.start();
+...  // call to the methods you want to benchmark
+...  watch.stop();
+...  elapsed = watch.getTime();
+```
 
-6. If you wants to show the path as a line, add the path to variable ```pathList``` (type ArrayList\<ArrayList\<Node\>\>). Or set type = 5 to the cell (color yellow in the canvas).
+6. If you needs the list of wall nodes, there is a variable name ```wallList``` (type ArrayList\<Node\>).
 
-7. Call ```setEnableWorkableComponents()``` function to dis/enable some controls (see the image below).
+7. Call ```Update()``` to repaint the canvas, then call ```delay()```, so you'll have time to see the changed.
+
+8. To show the path(s) as a line, add the path(s) to variable ```pathList``` (type ArrayList\<ArrayList\<Node\>\>). Or else set the type of the node = 5 (the color of the node will be yellow in the canvas &rarr; **this should be applying for the final path**).
+
+9. Call ```setEnableWorkableComponents()``` function to dis/enable some controls (see the image below).
 
 ![control disable](./screenshots/control-disable.png)
 
 8. If you needs map size like 16x16 or 13x9, press <kbd>Alt</kbd> + <kbd>C</kbd> to open Custom map size dialog.
 
-9.  To show the tab **Path list** first, change value 0 &rarr; 1 in the line 430.
+9.  To show the tab **Path list** first, change value 0 &rarr; 1 in the line 439.
     
 ```java
-430  tabbedPane.setSelectedIndex(0);
+439  tabbedPane.setSelectedIndex(0);
 ```
