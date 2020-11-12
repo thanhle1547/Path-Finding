@@ -75,7 +75,7 @@ public class PathFinding {
 	private int tool = 0;
 	private int checks = 0;
 	private double length = 0;
-	private double elapsed = 0;
+	private long elapsed = 0;
 	private int curAlg = 0;
 	private int WIDTH = 1145; // 850;
 	private final int HEIGHT = 650;
@@ -101,14 +101,14 @@ public class PathFinding {
 	JLabel algL = new JLabel("Algorithms");
 	JLabel toolL = new JLabel("Toolbox");
 	JLabel sizeL = new JLabel("Size:");
-	JLabel cellsL = new JLabel(columns + "x" + rows);
+	JLabel cellsL = new JLabel(columns + " × " + rows);
 	JLabel delayL = new JLabel("Delay:");
-	JLabel msL = new JLabel(delay + "ms");
+	JLabel msL = new JLabel(delay + " ms");
 	JLabel obstacleL = new JLabel("Dens:");
 	JLabel densityL = new JLabel(obstacles.getValue() + "%");
 	JLabel checkL = new JLabel("Checks: " + checks);
 	JLabel lengthL = new JLabel("Path Length: " + length);
-	JLabel elapsedL = new JLabel("Elapsed Time: " + elapsed);
+	JLabel elapsedL = new JLabel("Elapsed Time: " + elapsed + " ms");
 	JLabel tableL = new JLabel(
 			"<html><nobr><b><font color=red>Tips:</font></b><br>"
 		+ 	"&nbsp;&nbsp;+ Ctrl + Click chuột trái để bỏ chọn<br>"
@@ -356,7 +356,7 @@ public class PathFinding {
 		size.setMajorTickSpacing(10);
 		size.setBounds(50, space, 100, 25);
 		mapP.add(size);
-		cellsL.setBounds(160, space, 40, 25);
+		cellsL.setBounds(158, space, 42, 25);
 		mapP.add(cellsL);
 		space += buff - 10;
 
@@ -366,7 +366,7 @@ public class PathFinding {
 		obstacles.setMajorTickSpacing(5);
 		obstacles.setBounds(50, space, 100, 25);
 		mapP.add(obstacles);
-		densityL.setBounds(160, space, 100, 25);
+		densityL.setBounds(158, space, 100, 25);
 		mapP.add(densityL);
 
 		// Controls Panel
@@ -393,7 +393,7 @@ public class PathFinding {
 		speed.setMajorTickSpacing(5);
 		speed.setBounds(50, space, 100, 25);
 		ctrlsP.add(speed);
-		msL.setBounds(160, space, 40, 25);
+		msL.setBounds(158, space, 42, 25);
 		ctrlsP.add(msL);
 		space += buff - 10;
 
@@ -620,12 +620,12 @@ public class PathFinding {
 		m.updateDensity();
 		CSIZE = MSIZE / (columns > rows ? columns : rows);
 		canvas.repaint();
-		cellsL.setText(columns + "x" + rows);
-		msL.setText(delay + "ms");
+		cellsL.setText(columns + " × " + rows);
+		msL.setText(delay + " ms");
 		lengthL.setText("Path Length: " + length);
 		densityL.setText(obstacles.getValue() + "%");
 		checkL.setText("Checks: " + checks);
-		elapsedL.setText("Elapsed Time: " + elapsed);
+		elapsedL.setText("Elapsed Time: " + elapsed + " ms");
 	}
 
 	public void updateWallList(Node node) {

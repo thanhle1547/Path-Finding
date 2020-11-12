@@ -26,8 +26,8 @@ public class JDialogCustomMapSize implements ChangeListener {
     public static final int DEF_COLUMNS = 20;
     public static final int DEF_ROWS = 20;
 
-    static final String NxN_Size = "n x n";
-    static final String MxN_Size = "m x n";
+    static final String NxN_Size = " n × n";
+    static final String MxN_Size = " m × n";
 
     // JSlider default params value
     static final int DEF_MAJOR = 5;
@@ -149,7 +149,7 @@ public class JDialogCustomMapSize implements ChangeListener {
     }
 
     private String getMapSize() {
-        return "Map size is " + columns + " x " + rows;
+        return "Map size is " + columns + " × " + rows;
     }
 
     public int getColumns() {
