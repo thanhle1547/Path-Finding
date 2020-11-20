@@ -133,8 +133,8 @@ public class li2006_GAs extends GeneticAlgorithm {
      */
     public void select() {
         int n = population.size(),
-            b = 0,      // indexOfCurrentBestFitness
-            e = 0;      // indexOfElite
+            b = 0,       // indexOfCurrentBestFitness
+            e = -1;      // indexOfElite
         Random rd = new Random();
         ArrayList<ArrayList<Node>> newPopulation = new ArrayList<>();
         ArrayList<Double> newFitness = new ArrayList<>();
@@ -153,7 +153,7 @@ public class li2006_GAs extends GeneticAlgorithm {
                 e = i;
         }
 
-        if (e != 0) {
+        if (e != -1) {
             ArrayList<Node> elite = new ArrayList<>(population.get(e));
             Double eliteF = Double.valueOf(fitness.get(e));
             newPopulation.add(elite);
