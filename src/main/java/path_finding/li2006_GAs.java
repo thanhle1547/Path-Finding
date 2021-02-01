@@ -31,6 +31,7 @@ public class li2006_GAs extends GeneticAlgorithm {
         population = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             population.add(initChromosome());
+            System.out.println(population.get(i).toString());
         }
     }
 
@@ -62,52 +63,82 @@ public class li2006_GAs extends GeneticAlgorithm {
      * </ol>
      */
     public ArrayList<Node> initChromosome() {
+        ArrayList<Node> chromosome = new ArrayList<>(),
+                        stack = new ArrayList<>();
+
         Random rd = new Random();
-        int currIndex = 1;
-        boolean hasAddedNode = false;
         Node startNode = this.startNode, 
-            endNode = this.finishNode, 
-            wallNode;
-        ArrayList<Node> chromosome = new ArrayList<>();
-        ArrayList<Node> wallNodeList,
-                        freeNodeList;
+             endNode = this.finishNode,
+             wallNode,
+             freeNode;
+        ArrayList<Node> wallNodeList = getIntersectWallNode(startNode, endNode), 
+                        freeNodeList = new ArrayList<>(),
+                        checkedList = new ArrayList<>();
+        boolean hasAddedNode = false;
 
-        chromosome.add(startNode);
-        chromosome.add(finishNode);
-        wallNodeList = getIntersectWallNode(startNode, endNode);
-        freeNodeList = new ArrayList<>();
+        stack.add(startNode);
+        stack.add(endNode);
+        // stack.addAll(1, getListIntersectNode(null, startNode, endNode));
+        // stack = pickNodes(stack);
 
-        if (!isIntersectObstacle(startNode, endNode, map))
+        if (wallNodeList.size() == 0)
             return chromosome;
-        
+
+        startNode = stack.get(0);
+        endNode = stack.get(1);
+
         while (true) {
             try {
                 if (hasAddedNode) {
                     wallNodeList = getIntersectWallNode(startNode, endNode);
-                    if (wallNodeList.size() == 0 && chromosome.size() > 2)
-                        return chromosome;
+                    if (wallNodeList.size() == 0) {
+                        if (stack.size() == 2) {
+                            chromosome.add(stack.remove(0));
+                            chromosome.add(stack.remove(0));
+                            return chromosome;
+                        }
+                        chromosome.add(stack.remove(0));
+
+                        startNode = stack.get(0);
+                        endNode = stack.get(1);
+
+                        hasAddedNode = true;
+                        continue;
+                    }
                 }
 
                 wallNode = wallNodeList.get(rd.nextInt(wallNodeList.size()));
-                freeNodeList = getRedialNodeList(
-                    startNode.getDirection(endNode), 
-                    startNode, 
-                    wallNode
-                );
-                
-                chromosome.add(currIndex, freeNodeList.get(rd.nextInt(freeNodeList.size())));
+                freeNodeList = getRedialNodeList(startNode.getDirection(endNode), startNode, wallNode, endNode);
 
-                // for (int i = 0; i < chromosome.size(); i++) {
-                //     if (isIntersectObstacle(chromosome.get(i), chromosome.get(i + 1), map)) {
-                //         startNode = chromosome.get(i);
-                //         endNode = chromosome.get(i + 1);
-                //         currIndex = i + 1;
-                //         break;
-                //     }
-                // }
-                currIndex++;
-                startNode = chromosome.get(currIndex - 1); // ~ size - 2
-                endNode = chromosome.get(currIndex); // ~ size - 1
+                    // if (freeNodeList.size() == 0)
+                        // freeNodeList.addAll(getAvailableAroundNode(startNode, wallNode));
+
+                while (true) {
+                    freeNode = freeNodeList.get(rd.nextInt(freeNodeList.size()));
+
+                    if (!checkedList.contains(freeNode))
+                        checkedList.add(freeNode);
+                    else continue;
+
+                    if (!isIntersectObstacle(startNode, freeNode, map)
+                            || !isIntersectObstacle(freeNode, endNode, map)) {
+                        checkedList.clear();
+                        break;
+                    }
+
+                    if (checkedList.size() == freeNodeList.size()) {
+                        checkedList.clear();
+                        break;
+                    }
+                }
+
+                System.out.print(wallNode.getNo() + " --> ");
+
+                stack.add(1, freeNode);
+                System.out.print(stack.get(1).getNo() + "  ;  ");
+
+                // startNode = stack.get(0);
+                endNode = stack.get(1);
                 hasAddedNode = true;
             } catch (IndexOutOfBoundsException | IllegalArgumentException e) {
                 hasAddedNode = false;
@@ -133,8 +164,8 @@ public class li2006_GAs extends GeneticAlgorithm {
      */
     public void select() {
         int n = population.size(),
-            b = 0,       // indexOfCurrentBestFitness
-            e = -1;      // indexOfElite
+            b = 0,      // indexOfCurrentBestFitness
+            e = 0;      // indexOfElite
         Random rd = new Random();
         ArrayList<ArrayList<Node>> newPopulation = new ArrayList<>();
         ArrayList<Double> newFitness = new ArrayList<>();
@@ -153,12 +184,10 @@ public class li2006_GAs extends GeneticAlgorithm {
                 e = i;
         }
 
-        if (e != -1) {
-            ArrayList<Node> elite = new ArrayList<>(population.get(e));
-            Double eliteF = Double.valueOf(fitness.get(e));
-            newPopulation.add(elite);
-            newFitness.add(eliteF);
-        }
+        ArrayList<Node> elite = new ArrayList<>(population.get(e));
+        Double eliteF = Double.valueOf(fitness.get(e));
+        newPopulation.add(elite);
+        newFitness.add(eliteF);
         
         population = newPopulation;
         fitness = newFitness;
@@ -176,23 +205,35 @@ public class li2006_GAs extends GeneticAlgorithm {
         for (int i = 0; i < population.size(); i++) {
             ArrayList<Node> cloneC = cloneP.get(i);
             boolean hasEnd = false;
-            while (!hasEnd) {
-                for (int j = 1; j < cloneC.size() - 1; j++) {
+            int j = 1;
+            // while (!hasEnd) {
+            while (j < cloneC.size() - 1) {
+                for (; j < cloneC.size() - 1; j++) {
                     Node before = cloneC.get(j - 1),
                         current = cloneC.get(j),
                         after = cloneC.get(j + 1);
+                    boolean hasAddBefore = false;
+
+                    if (current == after) {
+                        cloneC.remove(j + 1);
+                        after = cloneC.get(j + 1);
+                    }
+
                     if (cloneC.get(j).getAngleBetween(before, after) == 90) {
                         Node endOfBefore = getAdjacentToEndNode(before, current),
                             endOfAfter = getAdjacentToEndNode(after, current);
                         cloneC.remove(j);
-                        if (!cloneC.contains(endOfBefore))
+                        if (!cloneC.contains(endOfBefore)) {
                             cloneC.add(j, endOfBefore);
+                            hasAddBefore = true;
+                        }
                         if (!cloneC.contains(endOfAfter))
-                            cloneC.add(j + 1, endOfAfter);
+                            cloneC.add(hasAddBefore ? j + 1 : j, endOfAfter);
+                        j++;
                         break;
                     }
-                    if (j == cloneC.size() - 2)
-                        hasEnd = true;
+                    // if (j == cloneC.size() - 2)
+                    //     hasEnd = true;
                 }
             }
             cloneP.set(i, cloneC);
@@ -228,7 +269,32 @@ public class li2006_GAs extends GeneticAlgorithm {
         population = cloneP;
     }
 
-    protected ArrayList<Node> getRedialNodeList(Direction lineDirection, Node startNode, Node node)
+    protected ArrayList<Node> pickNodes(ArrayList<Node> chromosome) {
+        ArrayList<Node> result = new ArrayList<>();
+        Random rd =  new Random();
+        boolean hasEnd = false;
+        Integer startIndex = 0;
+        int j = 1;
+        int size = chromosome.size();
+
+        result.add(chromosome.get(0));
+        while (!hasEnd) {
+            int i = rd.nextInt(size - 1) + 1;
+            if (i > startIndex && chromosome.get(i).getType() == 3
+                && isIntersectObstacle(chromosome.get((int) startIndex), chromosome.get(i), map)) {
+                startIndex = i;
+                result.add(chromosome.get(i));
+            }
+            if (!isIntersectObstacle(chromosome.get((int) startIndex), chromosome.get(i), map))
+                hasEnd = true;
+        }
+
+        result.add(chromosome.get(chromosome.size() - 1));
+
+        return result;
+    }
+
+    protected ArrayList<Node> getRedialNodeList(Direction lineDirection, Node startNode, Node node, Node endNode)
             throws IndexOutOfBoundsException
     {
         // 2 dimensional array
@@ -239,6 +305,7 @@ public class li2006_GAs extends GeneticAlgorithm {
 		// 	(-2, 2)                 (0, 2)              (2, 2)
         Node n1 = node, 
             n2 = node;
+        // Node endNode = 
         ArrayList<Node> freeNodeList = new ArrayList<>();
         int step = 1,
             x1, y1, x2, y2;
@@ -266,8 +333,8 @@ public class li2006_GAs extends GeneticAlgorithm {
             if (!hasStNodeOutBound) {
                 try {
                     n1 = map[node.getX() + (x1 * step)][node.getY() + (y1 * step)];
-                    if (n1.getType() == 3) {
-                        if (!isIntersectObstacle(startNode, n1, map))
+                    if (n1.getType() == 3 /* && n1.insideRect(startNode, endNode) */) {
+                        // if (!isIntersectObstacle(startNode, n1, map))
                             freeNodeList.add(n1);
                         isStNodeFound = true;
                     }
@@ -281,8 +348,8 @@ public class li2006_GAs extends GeneticAlgorithm {
             if (!hasNdNodeOutBound) {
                 try {
                     n2 = map[node.getX() + (x2 * step)][node.getY() + (y2 * step)];
-                    if (n2.getType() == 3) {
-                        if (!isIntersectObstacle(startNode, n2, map))
+                    if (n2.getType() == 3 /* && n1.insideRect(startNode, endNode) */) {
+                        // if (!isIntersectObstacle(startNode, n2, map))
                             freeNodeList.add(n2);
                         isNdNodeFound = true;
                     } 
@@ -297,6 +364,92 @@ public class li2006_GAs extends GeneticAlgorithm {
         }
 
         return freeNodeList;
+    }
+    
+    /* 
+    // other ver
+    protected ArrayList<Node> getRedialNodeList(Direction lineDirection, Node startNode, Node node)
+            throws IndexOutOfBoundsException
+    {
+        // 2 dimensional array
+		// 	(-2, -2)                (0, -1)	            (2, -2)
+		// 		    NW (-1, -1)   N (0, -1)	  NE (1, -1)
+		// 	(-2, 0) W (-1, 0) 		(0, 0)     E (1, 0) (0, 2)
+		// 		    SW (-1, 1)    S (0, 1)	  SE (1, 1)
+		// 	(-2, 2)                 (0, 2)              (2, 2)
+        Node n = node;
+        ArrayList<Node> freeNodeList = new ArrayList<>();
+        int step = 1;
+        ArrayList<Integer> coords = new ArrayList<>();
+        ArrayList<Boolean> outBound;
+        boolean[] nodeFound;
+
+        if (lineDirection.name().length() == 1) {
+            coords.add(lineDirection.getY());
+            coords.add(lineDirection.getX());
+            coords.add(- lineDirection.getY());
+            coords.add(- lineDirection.getX());
+        } else {
+            coords.add(lineDirection.getX());
+            coords.add(- lineDirection.getY());
+            coords.add(- lineDirection.getX());
+            coords.add(lineDirection.getY());
+        }
+
+
+        int[] xy = coords.stream().mapToInt(val -> val).toArray();
+
+        outBound = new ArrayList<>(Arrays.asList(new Boolean[xy.length / 2]));
+        nodeFound = new boolean[xy.length / 2];
+
+        Collections.fill(outBound, false);
+
+        while (true) {
+            if (!outBound.contains(false))
+                break;
+
+            for (int i = 0; i < xy.length; i += 2) {
+                int j = i / 2;
+                if (!outBound.get(j)) {
+                    try {
+                        n = map[node.getX() + (xy[i] * step)][node.getY() + (xy[i + 1] * step)];
+                        if (n.getType() == 3) {
+                            if (!isIntersectObstacle(startNode, n, map))
+                                freeNodeList.add(n);
+                            nodeFound[j] = true;
+                        }
+                        else if (nodeFound[j])
+                            outBound.set(j, true);
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        outBound.set(j, true);
+                    }
+                }
+            }
+            
+            step++;
+        }
+
+        return freeNodeList;
+    } */
+
+    protected ArrayList<Node> getAvailableAroundNode(Node startNode, Node node) {
+        ArrayList<Node> result = new ArrayList<>();
+
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                    try {
+                        Node n = map[node.getX() + i][node.getY() + j];
+                        if (n.getType() == 3) {
+                            if (!isIntersectObstacle(startNode, n, map))
+                                result.add(n);
+                        }
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        continue;
+                    }
+            }
+        }
+
+        return result;
     }
 
     /**

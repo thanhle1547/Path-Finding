@@ -474,6 +474,7 @@ public class PathFinding {
 					return;
 
 				clearMap();
+				pathList.clear();
 				m.setMap(dialog.getResult());
 				map = m.getMap();
 				columns = m.getColumns();
@@ -872,7 +873,7 @@ public class PathFinding {
 			}
 
 			// GeneticAlgorithm alg = new GeneticAlgorithm(m, wallList, CSIZE, dialog.getPenaltyValue());
-			li2006_GAs alg = new li2006_GAs(m, wallList, CSIZE, dialog.getNumOfSizeForSelect());
+			ProposedGAs alg = new ProposedGAs(m, wallList, CSIZE, dialog.getNumOfSizeForSelect());
 			alg.setCommonParams(dialog.getCrossoverProbability(), dialog.getMutationProbability());
 			int generation = 0;
 

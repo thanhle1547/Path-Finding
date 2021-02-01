@@ -1,5 +1,6 @@
 package path_finding;
 
+import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -122,7 +123,11 @@ class Node implements Serializable, Cloneable {
 	public int getAngleBetween(Node before, Node after) {
 		double angle1 = Math.toDegrees(Math.atan2(before.getY() - y, before.getX() - x));
 		double angle2 = Math.toDegrees(Math.atan2(y - after.getY(), x - after.getX()));
-		return (int) Math.abs(angle1 - angle2);
+		int result = (int) Math.abs(angle1 - angle2);
+		if (result > 180)
+			result = Math.abs(180 - result);
+
+		return result;
 	}
 
 	/**
@@ -158,6 +163,16 @@ class Node implements Serializable, Cloneable {
 			(x * squareSideLength) + (squareSideLength / 2), 
 			(y * squareSideLength) + (squareSideLength / 2)
 		);
+	}
+
+	/**
+	 * @author thanhLe1547
+	 */
+	public boolean insideRect(Node startNode, Node endNode) {
+		Rectangle rect = new Rectangle(startNode.getX(), startNode.getY());
+		rect.add(endNode.getX(), endNode.getY());
+
+		return rect.contains(getX(), getY());
 	}
 
 	public int getNo() {return no;}		

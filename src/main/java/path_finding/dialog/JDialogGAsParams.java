@@ -13,12 +13,12 @@ import javax.swing.SpinnerNumberModel;
 public class JDialogGAsParams {
     // default
     public static int POPULATION_SIZE = 5;
-    public static int GENERATION_NUMBER = 5; // maximum evolution
+    public static int GENERATION_NUMBER = 8; // maximum evolution
     public static int CROSSOVER_PROBABILITY = 50;
     public static int MUTATION_PROBABILITY = 25;
 
     SpinnerModel populationSizeModel = new SpinnerNumberModel(POPULATION_SIZE, 2, 5000, 1);
-    SpinnerModel generationNumberModel = new SpinnerNumberModel(GENERATION_NUMBER, 1, 5000, 5);
+    SpinnerModel generationNumberModel = new SpinnerNumberModel(GENERATION_NUMBER, 1, 5000, 8);
     SpinnerModel crossoverPBTY = new SpinnerNumberModel(CROSSOVER_PROBABILITY, 1, 100, 1);
     SpinnerModel mutationPBTY = new SpinnerNumberModel(MUTATION_PROBABILITY, 1, 100, 5);
     JSpinner spPopulationSize = new JSpinner(populationSizeModel);

@@ -243,7 +243,7 @@ public class GeneticAlgorithm {
                     if (selectedList.size() != parent_1.size() - 2) {
                         // Random theo công thức, ko bao gồm giá trị cuối/lớn nhất
                         // rd.nextInt(max - 1 - min + 1) + min
-                        index_1 = rd.nextInt(parent_1.size() - 2) + 1;
+                        index_1 = rd.nextInt(parent_1.size() - 1) + 1;
                         // nằm trong khoảng của parent_2 ??? có cần
                         if (selectedList.contains(index_1))
                             continue;
@@ -252,6 +252,7 @@ public class GeneticAlgorithm {
                         index_2 = parent_1.get(index_1).getPossibleIndexOfNo(parent_2);
                         if (index_2 == -1)
                             continue;
+                        parent_2.add(index_2, parent_1.get(index_1));
                     } else {
                         // TH tìm hết parent_1 rồi nhưng ko có cái nào
                         index_1 = rd.nextInt(parent_1.size() - 2) + 1;
@@ -271,8 +272,8 @@ public class GeneticAlgorithm {
             ArrayList<Node> child_1 = new ArrayList<>(parent_1.subList(0, i1)),
                             child_2 = new ArrayList<>(parent_2.subList(0, i2));
 
-            child_1.addAll(isInterconnectedUsed ? --i1 : i1, parent_1.subList(i1, parent_1.size()));
-            child_2.addAll(isInterconnectedUsed ? --i2 : i2, parent_2.subList(i2, parent_2.size()));
+            child_1.addAll(isInterconnectedUsed ? --i1 : i1, parent_2.subList(i2, parent_2.size()));
+            child_2.addAll(isInterconnectedUsed ? --i2 : i2, parent_1.subList(i1, parent_1.size()));
             
             cloneP.add(child_1);
             cloneF.add(evaluate(child_1));
@@ -334,8 +335,8 @@ public class GeneticAlgorithm {
         */
 
         for (int i = 0; i < subList.size(); i++) {
-            isMutate = rd.nextBoolean();
-            if (isMutate) {
+            // isMutate = rd.nextBoolean();
+            // if (isMutate) {
                 ArrayList<Node> chromosome = subList.get(i);
                 // Từ bài báo số 2
                 // random select a node  (not the start node or the goal node)
@@ -349,7 +350,7 @@ public class GeneticAlgorithm {
                 for (int j = -1; j <= 1; j++) {
                     for (int k = -1; k <= 1; k++) {
                         try {
-                            Node node = map[selectedNode.getX() + k][selectedNode.getY() + k];
+                            Node node = map[selectedNode.getX() + j][selectedNode.getY() + k];
                             if (node.getType() == 3) {
                                 ArrayList<Node> offspring = new ArrayList<>(chromosome);
                                 offspring.set(nodeIndex, node);
@@ -377,7 +378,7 @@ public class GeneticAlgorithm {
 
                 offsprings.clear();
                 offspringsF.clear();
-            }
+            // }
         }
 
         subList = new ArrayList<>(population.subList(0, breakpoint));
@@ -512,23 +513,34 @@ public class GeneticAlgorithm {
         // Thay vì dùng cách trên, trong lớp Line2D đã có sẵn phương thức để kiểm tra
         for (int i = 0; i < wallNode.size(); i++) {
             Node node = wallNode.get(i);
-            if (line.intersects(new Rectangle(node.getX() * CSIZE, node.getY() * CSIZE, CSIZE, CSIZE)))
+            if (line.intersects(new Rectangle(node.getX() * CSIZE + 1, node.getY() * CSIZE + 1, CSIZE - 1, CSIZE - 1)))
                 return true;
         }
 
         return false;
     }
 
-    protected boolean isIntersectObstacle(Node startNode, Node endNode, Node node) {
+    protected boolean isIntersectNode(Node startNode, Node endNode, Node node) {
         Line2D line = new Line2D.Double(
                 startNode.getCenterPoint(CSIZE), 
                 endNode.getCenterPoint(CSIZE)
         );
-        return line.intersects(new Rectangle(node.getX() * CSIZE, node.getY() * CSIZE, CSIZE, CSIZE));
+        return line.intersects(new Rectangle(node.getX() * CSIZE + 1, node.getY() * CSIZE + 1, CSIZE - 1, CSIZE - 1));
+    }
+
+    protected ArrayList<Node> getIntersectFreeNode(Node startNode, Node endNode) {
+        return getListIntersectNode(3, startNode, endNode);
     }
 
     protected ArrayList<Node> getIntersectWallNode(Node startNode, Node endNode) {
-        ArrayList<Node> wallNodes = new ArrayList<>();
+        return getListIntersectNode(2, startNode, endNode);
+    }
+    
+    /**
+     * @param nodeType - pass {@code null} to get all
+     */
+    protected ArrayList<Node> getListIntersectNode(Integer nodeType, Node startNode, Node endNode) {
+        ArrayList<Node> list = new ArrayList<>();
         ArrayList<Integer> 	x_coords = new ArrayList<>(),
                             y_coords = new ArrayList<>();
         x_coords.add(startNode.getX());
@@ -541,11 +553,13 @@ public class GeneticAlgorithm {
 
         for (int i = x_coords.get(0); i <= x_coords.get(1); i++) {
             for (int j = y_coords.get(0); j <= y_coords.get(1); j++) {
-                if (map[i][j].getType() == 2 && isIntersectObstacle(startNode, endNode, map[i][j]))
-                    wallNodes.add(map[i][j]);
+                if ((nodeType == null || map[i][j].getType() == nodeType) 
+                    && isIntersectNode(startNode, endNode, map[i][j])
+                    && !list.contains(map[i][j]))
+                    list.add(map[i][j]);
             }
         }
-        return wallNodes;
+        return list;
     }
 
     /* public void clearFitness() {
