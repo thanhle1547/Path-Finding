@@ -565,10 +565,10 @@ public class PathFinding {
 		pathT.addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
-				ArrayList<Node> path = pathT.getSelectedPath();
+				ArrayList<ArrayList<Node>> path = pathT.getSelectedPath();
 				pathList.clear();
 				if (path != null)
-					pathList.add(path);
+					pathList.addAll(path);
 
 				canvas.repaint();
 			}

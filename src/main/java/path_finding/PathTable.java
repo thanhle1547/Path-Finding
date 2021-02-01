@@ -20,7 +20,7 @@ public class PathTable extends JTable {
     HashMap<String, ArrayList<ArrayList<Node>>> data = new HashMap<>();
     DefaultTableModel model = new DefaultTableModel(new Object[][] {}, columnNames);
 
-    ArrayList<Node> selectedPath;
+    ArrayList<ArrayList<Node>> selectedPaths;
 
     public PathTable() {
         setShowGrid(false);
@@ -33,16 +33,22 @@ public class PathTable extends JTable {
             public void valueChanged(ListSelectionEvent e) {
                 int row = getSelectedRow();
                 if (row == -1) {
-                    selectedPath = null;
+                    selectedPaths = null;
                     return;
                 }
                 
                 String combinedKkey = model.getValueAt(row, 0).toString();
                 if (combinedKkey.length() == 0)
-                    selectedPath = null;
+                    selectedPaths = null;
                 else {
                     String[] split = combinedKkey.split("@", 2);
-                    selectedPath = data.get(split[0]).get(Integer.valueOf(split[1]));
+                    if (split.length == 1)
+                        selectedPaths = data.get(split[0]);
+                    else {
+                        ArrayList<Node> path = data.get(split[0]).get(Integer.valueOf(split[1]));
+                        selectedPaths = new ArrayList<>();
+                        selectedPaths.add(path);
+                    }
                 }
             }
         });
@@ -63,11 +69,14 @@ public class PathTable extends JTable {
      */
     public void addData(String title, String nameForData, ArrayList<ArrayList<Node>> data, String[] dataInString) {
         Object[] rowData;
-        ArrayList<ArrayList<Node>> clone = new ArrayList<>(data);
+        ArrayList<ArrayList<Node>> clone = new ArrayList<>();
+        for (ArrayList<Node> d : data) {
+            clone.add(new ArrayList<>(d));
+        }
 
         if (title != null && title.length() != 0) {
             rowData = new Object[2];
-            rowData[0] = "";
+            rowData[0] = nameForData;
             rowData[1] = title;
             model.addRow(rowData);
         }
@@ -116,7 +125,7 @@ public class PathTable extends JTable {
         super.doLayout();
     }
 
-    public ArrayList<Node> getSelectedPath() {
-        return selectedPath;
+    public ArrayList<ArrayList<Node>> getSelectedPath() {
+        return selectedPaths;
     }
 }
