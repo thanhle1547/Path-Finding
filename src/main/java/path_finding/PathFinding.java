@@ -656,6 +656,13 @@ public class PathFinding {
 	class Canvas extends JPanel implements MouseListener, MouseMotionListener{	//MAP CLASS
 		private static final long serialVersionUID = 3006316467662386292L;
 
+		/** Current node */
+		private Node cNode;
+		/** Current x coord */
+		private int cX;
+		/** Current y coord */
+		private int cY;
+
 		public Canvas() {
 			addMouseListener(this);
 			addMouseMotionListener(this);
@@ -722,23 +729,65 @@ public class PathFinding {
 					g.fillOval(getCenter(next.getX()) - 3, getCenter(next.getY()) - 3, 6, 6);
 				}
 			}
+
+			if (cNode == null || (columns <= 20 && rows <= 20)) return;
+
+			String name = cNode.getTypeName();
+
+			g.setColor(Color.ORANGE);
+			g.fillRect(cX, cY - 15, 50 + name.length() * 3 + 15, 65);
+
+			cX += 5;
+			g.setColor(Color.DARK_GRAY);
+			g.drawString("X:       " + cNode.getX(), cX, cY);
+			g.drawString("Y:       " + cNode.getY(), cX, cY + 15);
+			g.drawString("No:    " + cNode.getNo(), cX, cY + 30);
+			g.drawString("Type: " + name, cX, cY + 45);
 		}
 
 		@Override
 		public void mouseDragged(MouseEvent e) {
 			try {
-				int x = e.getX()/CSIZE;	
-				int y = e.getY()/CSIZE;
-				Node current = map[x][y];
-				if((tool == 2 || tool == 3) && (current.getType() != 0 && current.getType() != 1))
+				int x = e.getX();
+				int y = e.getY();
+				int nx = x / CSIZE;
+				int ny = y / CSIZE;
+				Node current = map[nx][ny];
+
+				if ((tool == 2 || tool == 3) && (current.getType() != 0 && current.getType() != 1))
 					current.setType(tool);
+				
+				if (columns > 20 || rows > 20)
+					setCurrentInfo(
+							x, y,
+							e.getComponent().getWidth(), e.getComponent().getHeight(),
+							current
+					);
+				
 				Update();
 				updateWallList(current);
 			} catch(Exception z) {}
 		}
 
 		@Override
-		public void mouseMoved(MouseEvent e) {}
+		public void mouseMoved(MouseEvent e) {
+			try {
+				if (columns <= 20 && rows <= 20) return;
+
+				int x = e.getX();
+				int y = e.getY();
+				int nx = x / CSIZE;
+				int ny = y / CSIZE;
+				
+				setCurrentInfo(
+						x, y,
+						e.getComponent().getWidth(), e.getComponent().getHeight(),
+						map[nx][ny]
+				);
+
+				repaint();
+			} catch(Exception z) {}
+		}
 
 		@Override
 		public void mouseClicked(MouseEvent e) {}
@@ -792,6 +841,17 @@ public class PathFinding {
 
 		@Override
 		public void mouseReleased(MouseEvent e) {}
+
+		private void setCurrentInfo(int x, int y, int width, int height, Node node) {
+			if (x > width - 100) x -= 100;
+			else x += 20;
+			if (y > height - 70) y -= 50;
+			else y += 20;
+			
+			cX = x;
+			cY = y;
+			cNode = node;
+		}
 	}
 	
 	class Algorithm {	//ALGORITHM CLASS

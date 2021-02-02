@@ -148,6 +148,26 @@ class Node implements Serializable, Cloneable {
 		);
 	}
 
+	public String getTypeName() {
+		switch (cellType) {
+			case 0:
+				return "Start";
+			case 1:
+				return "Finish";
+			case 2:
+				return "Wall";
+			case 3:
+				return "Empty";
+			case 4:
+				return "Explored";
+			case 5:
+				return "Final path";
+
+			default:
+				return "None";
+		}
+	}
+
 	public int getNo() {return no;}		
 	public int getX() {return x;}		//GET METHODS
 	public int getY() {return y;}
