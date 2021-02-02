@@ -1,2 +1,4 @@
-
 *.log
+**_Improve_v[1-9].*
+instructions
+summary.md
